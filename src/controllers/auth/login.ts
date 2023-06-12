@@ -1,15 +1,17 @@
 import { Request, Response } from "express";
 import { fetchFromAccessToken } from "../../helper/fetchFromAccessToken";
+import {UserModel} from '../../models/user/User.js'
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const accessToken = req.headers.authorization
+    const accessToken = req.headers.authorization;
     if (!accessToken) {
       res
         .status(401)
         .json({ success: false, message: "there is no access token" });
     }
     const userData = await fetchFromAccessToken(accessToken as string);
+    
     console.log(userData);
   } catch (error) {
     res
