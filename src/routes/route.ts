@@ -1,6 +1,9 @@
 import Express, { Router } from "express";
-import { login } from "../controllers/auth/login";
+import { signup } from "../controllers/auth/signup";
+import { isUserAlreadyExistOrNot } from "../controllers/auth/isUserAlreadyExistOrNot";
 
 export const router: Router = Express.Router();
 
-router.post("/login", login);
+router.post("/isUserAlreadyExist",isUserAlreadyExistOrNot)
+
+router.post("/signup", signup);
