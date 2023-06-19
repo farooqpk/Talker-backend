@@ -1,3 +1,5 @@
+import { Request } from "express";
+
 export interface AccesTokenData {
     sub: string;
     picture: string;
@@ -9,4 +11,8 @@ export interface AccesTokenData {
     name: string;
     email: string;
     picture: string;
+  }
+
+ export interface AuthenticatedRequest extends Request {
+    userId: string;
   }
