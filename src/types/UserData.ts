@@ -1,4 +1,4 @@
-import { Request } from "express";
+
 
 export interface AccesTokenData {
     sub: string;
@@ -13,6 +13,3 @@ export interface AccesTokenData {
     picture: string;
   }
 
- export interface AuthenticatedRequest extends Request {
-    userId: string;
-  }

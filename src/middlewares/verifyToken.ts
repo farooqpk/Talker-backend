@@ -1,9 +1,9 @@
 import { NextFunction, Response } from "express";
-import { AuthenticatedRequest } from "../types/UserData";
-import jwt from "jsonwebtoken";
+import { ReqObjWithUserId } from "../types/ReqObjWithUserId";
+import jwt, { decode } from "jsonwebtoken";
 
 export const verifyToken = async (
-  req: AuthenticatedRequest,
+  req: ReqObjWithUserId,
   res: Response,
   next: NextFunction
 ) => {
@@ -15,15 +15,17 @@ export const verifyToken = async (
         .json({ success: false, message: "token is required" });
     }
 
-    const decodedData = jwt.verify(token, process.env.TOKEN_SECRET!);
-    if (decodedData) {
-      req.userId = decodedData as string;
-      next();
-    } else {
-      return res
-        .status(401)
-        .json({ success: false, message: "token is invalid" });
-    }
+    jwt.verify(token, process.env.TOKEN_SECRET!, (err, decodedData) => {
+      if (err) {
+        return res
+          .status(401)
+          .json({ success: false, message: "token is invalid" });
+      } else {
+        console.log(decodedData);
+        req.userId = decodedData as string;
+        next();
+      }
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,
