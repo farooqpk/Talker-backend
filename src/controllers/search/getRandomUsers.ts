@@ -5,7 +5,8 @@ export const getRandomUsers = async (req: Request, res: Response) => {
   try {
     const users = await UserModel.aggregate([
       {
-        $sample: { size: 6 },
+        // $sample is used to access random docs
+        $sample: { size: 5 },
       },
       {
         $project: { email: 0, sub: 0, createdAt: 0, updatedAt: 0 },

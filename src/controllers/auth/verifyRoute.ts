@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 export const verifyRoute = (req: Request, res: Response) => {
   if (req.headers.cookie) {
     const token = req.headers.cookie.split("=")[1];
-   console.count()
     if (token) {
       jwt.verify(token, process.env.TOKEN_SECRET!, (err, tokenDecoded) => {
         if (err) {
