@@ -9,6 +9,7 @@ import http from "http";
 import { Server, Socket } from "socket.io";
 import { socketHandler } from "./socket/socketHandler";
 import { verifyJwt } from "./helpers/verifyJwt";
+import { storeSocketRedis } from "./redis/storeSocket";
 dotenv.config();
 
 const app: Express = express();
@@ -36,15 +37,18 @@ app.get("/", (req: Request, res: Response): void => {
 const io: Server = new Server(server, {
   cors: { origin: process.env.CLIENT_URL, credentials: true },
 });
+
 io.on("connection", (socket: Socket) => {
   const token = socket.request.headers.cookie;
   if (token) {
     verifyJwt(token)
       .then((userId) => {
-        socketHandler(socket, io,userId);
+        storeSocketRedis(userId, socket.id).then(() => {
+          socketHandler(socket, io, userId);
+        });
       })
       .catch((e) => {
-        io.close()
+        io.close();
       });
   }
 });

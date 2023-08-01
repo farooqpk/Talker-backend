@@ -9,7 +9,7 @@ export const verifyJwt = async (value: string) => {
       process.env.TOKEN_SECRET!
     ) as JwtDecodedType;
     if (decodedData) {
-      return decodedData.userId;
+      return decodedData.userId
     } else {
       throw new Error("Invalid token or token cannot be decoded");
     }

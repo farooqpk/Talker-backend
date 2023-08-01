@@ -21,11 +21,11 @@ export const signup = async (req: Request, res: Response) => {
       picture: tempCachedData.picture,
     });
 
-    const token = createJwtToken(user._id);
+    const token = createJwtToken(user._id,user.name);
 
     res.cookie("token", token, {
       httpOnly: true,
-      expires: new Date(Date.now() + 12 * 60 * 60 * 1000),
+      maxAge: 24 * 60 * 60 * 1000, // Expiry time in milliseconds (24 hours in this case)
     } as CookieOptions);
 
     return res.status(201).json(true);

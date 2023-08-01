@@ -15,6 +15,7 @@ export interface UserType {
 
 export interface JwtDecodedType {
   userId: string;
+  username:string
   iat: number;
   exp: number;
 }

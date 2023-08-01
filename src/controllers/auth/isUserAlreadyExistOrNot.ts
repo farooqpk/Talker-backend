@@ -14,15 +14,16 @@ export const isUserAlreadyExistOrNot = async (req: Request, res: Response) => {
         .json({ success: false, message: "there is no access token" });
     }
     const accesedData = await fetchFromAccessToken(accessToken as string);
-    const isUserExist = await UserModel.exists({ sub: accesedData.sub });
+
+    const isUserExist = await UserModel.findOne({ sub: accesedData.sub });
 
     if (isUserExist) {
       //create token
-      const token = createJwtToken(isUserExist._id);
+      const token = createJwtToken(isUserExist._id, isUserExist.name);
 
       res.cookie("token", token, {
         httpOnly: true,
-        expires: new Date(Date.now() + 12 * 60 * 60 * 1000),
+        maxAge: 24 * 60 * 60 * 1000,
       } as CookieOptions);
 
       return res.status(200).json({ isExist: true });
