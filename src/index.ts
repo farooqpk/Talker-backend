@@ -42,9 +42,9 @@ io.on("connection", (socket: Socket) => {
   const token = socket.request.headers.cookie;
   if (token) {
     verifyJwt(token)
-      .then((userId) => {
-        storeSocketRedis(userId, socket.id).then(() => {
-          socketHandler(socket, io, userId);
+      .then((payload) => {
+        storeSocketRedis(payload.userId, socket.id).then(() => {
+          socketHandler(socket, io,payload);
         });
       })
       .catch((e) => {
