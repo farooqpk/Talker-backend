@@ -25,7 +25,7 @@ export const signup = async (req: Request, res: Response) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // Expiry time in milliseconds (24 hours in this case)
+      maxAge: 12 * 60 * 60 * 1000, // Expiry time in milliseconds
     } as CookieOptions);
 
     return res.status(201).json(true);
