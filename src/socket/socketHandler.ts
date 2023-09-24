@@ -23,4 +23,10 @@ export const socketHandler = (
       socket.emit("offline", "now recipient is offline");
     }
   });
+
+  socket.on("status", async (recipient) => {
+    const IsrecipientExist = await getSocketsFromRedis(recipient);
+    if (IsrecipientExist) socket.emit("status", { status: "online" });
+    else socket.emit("status", { status: "offline" });
+  });
 };

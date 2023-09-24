@@ -20,7 +20,6 @@ export const isUserAlreadyExistOrNot = async (req: Request, res: Response) => {
     if (isUserExist) {
       //create token
       const token = createJwtToken(isUserExist._id, isUserExist.name);
-
       res.cookie("token", token, {
         httpOnly: true,
         maxAge: 12 * 60 * 60 * 1000,
