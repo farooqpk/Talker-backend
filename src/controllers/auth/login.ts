@@ -3,7 +3,7 @@ import { createJwtToken } from "../../utils/createJwtToken";
 import { prisma } from "../../utils/prisma";
 import * as bcrypt from "bcrypt";
 
-export const signup = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response) => {
   try {
     const username = req.body.username;
     const password = req.body.password;
@@ -14,30 +14,35 @@ export const signup = async (req: Request, res: Response) => {
       },
     });
 
-    if (isUserNameAlreadyExist) {
-      return res.status(403).json({
-        success: true,
-        message: "Username Already Exists",
+    if (!isUserNameAlreadyExist) {
+      return res.status(404).json({
+        success: false,
+        message: "User doesnt exist",
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
-      data: {
-        username,
-        password: hashedPassword,
-        createdAt: new Date(),
-      },
-    });
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      isUserNameAlreadyExist.password
+    );
 
-    const token = createJwtToken(user.userId, user.username);
+    if (!isPasswordCorrect) {
+      return res.status(403).json({
+        success: false,
+        message: "User doesnt exist",
+      });
+    }
+
+    const token = createJwtToken(
+      isUserNameAlreadyExist.userId,
+      isUserNameAlreadyExist.username
+    );
 
     res.cookie("token", token, {
-      // httpOnly: true,
       maxAge: 12 * 60 * 60 * 1000,
     } as CookieOptions);
 
-    return res.status(201).json(true);
+    return res.status(200).json(true);
   } catch (error: any) {
     return res.status(500).json({
       success: false,

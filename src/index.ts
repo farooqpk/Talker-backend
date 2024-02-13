@@ -2,24 +2,20 @@ import express, { Express, Request, Response, urlencoded } from "express";
 import cors from "cors";
 import { router } from "./routes/route";
 import dotenv from "dotenv";
-import mongoose from "mongoose";
-import * as Redis from "redis";
 import cookieParser from "cookie-parser";
 import http from "http";
 import { Server, Socket } from "socket.io";
 import { socketHandler } from "./socket/socketHandler";
-import { verifyJwt } from "./helpers/verifyJwt";
-import { storeSocketRedis } from "./redis/storeSocket";
+import {connectPrisma} from "./utils/prisma";
+import { verifyJwt } from "./utils/verifyJwt";
 dotenv.config();
 
 const app: Express = express();
 const server = http.createServer(app);
 
-export const RedisClient = Redis.createClient();
-
 app.use(
   (cors as (options: cors.CorsOptions) => express.RequestHandler)({
-    origin: process.env.CLIENT_URL,
+    origin:true,
     credentials: true,
     methods: "GET,POST,PUT,DELETE",
   })
@@ -43,9 +39,7 @@ io.on("connection", (socket: Socket) => {
   if (token) {
     verifyJwt(token)
       .then((payload) => {
-        storeSocketRedis(payload.userId, socket.id).then(() => {
-          socketHandler(socket, io,payload);
-        });
+        socketHandler(socket, io, payload);
       })
       .catch((e) => {
         io.close();
@@ -53,13 +47,7 @@ io.on("connection", (socket: Socket) => {
   }
 });
 
-// connections
-mongoose.connect(process.env.DB_URL!).then(() => {
-  console.log("mongodb connected");
-  RedisClient.connect().then(() => {
-    console.log("redis connected");
-    server.listen(process.env.PORT, () => {
-      console.log("server connected");
-    });
-  });
+server.listen(process.env.PORT!, async() => {
+  console.log("server connected");
+  await connectPrisma()
 });

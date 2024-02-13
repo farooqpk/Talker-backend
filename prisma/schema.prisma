@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId           String    @id @default(auto()) @map("_id") @db.ObjectId
+  username         String    @unique
+  password         String
+  createdAt        DateTime
+  // Relationships
+  messagesSent     Message[] @relation("SentMessages")
+  messagesReceived Message[] @relation("ReceivedMessages")
+  chatsUser1       Chat[]    @relation("User1Chats")
+  chatsUser2       Chat[]    @relation("User2Chats")
+}
+
+model Chat {
+  chatId    String    @id @default(auto()) @map("_id") @db.ObjectId
+  user1Id   String    @db.ObjectId
+  user2Id   String    @db.ObjectId
+  createdAt DateTime
+  // Relationships
+  user1     User      @relation("User1Chats", fields: [user1Id], references: [userId])
+  user2     User      @relation("User2Chats", fields: [user2Id], references: [userId])
+  messages  Message[]
+
+  @@unique([user1Id, user2Id])
+}
+
+model Message {
+  messageId   String   @id @default(auto()) @map("_id") @db.ObjectId
+  chatId      String   @db.ObjectId
+  senderId    String   @db.ObjectId
+  receiverId  String   @db.ObjectId
+  contentType String // 'text', 'voice', etc.
+  content     String // For text messages
+  mediaUrl    String // For voice messages or attachments
+  createdAt   DateTime
+  // Relationships
+  chat        Chat     @relation(fields: [chatId], references: [chatId])
+  sender      User     @relation("SentMessages", fields: [senderId], references: [userId])
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [userId])
+}

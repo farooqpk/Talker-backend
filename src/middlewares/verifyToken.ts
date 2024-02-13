@@ -8,7 +8,7 @@ export const verifyToken = async (
   next: NextFunction
 ) => {
   try {
-    const token = req.headers.cookie?.split("=")[1];
+    const token = (req.headers as any)?.cookie?.split("=")[1];
     if (!token) {
       return res
         .status(404)
@@ -21,6 +21,7 @@ export const verifyToken = async (
     ) as JwtDecodedType;
     if (decodedData) {
       req.userId = decodedData.userId;
+      req.username = decodedData.username;
       next();
     } else {
       return res

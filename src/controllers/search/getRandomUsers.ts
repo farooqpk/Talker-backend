@@ -1,23 +1,22 @@
 import { Request, Response } from "express";
-import { UserModel } from "../../models/user/User";
-import mongoose from "mongoose";
+import { prisma } from "../../utils/prisma";
 
 export const getRandomUsers = async (req: Request, res: Response) => {
   try {
-    const userId = new mongoose.Types.ObjectId(req.userId);
-
-    const users = await UserModel.aggregate([
-      {
-        $match: { _id: { $ne: userId } },
+    const users = await prisma.user.findMany({
+      where: {
+        userId: {
+          not: {
+            equals: req.userId,
+          },
+        },
       },
-      {
-        // $sample is used to access random docs
-        $sample: { size: 5 },
+      take: 5,
+      select: {
+        userId: true,
+        username: true,
       },
-      {
-        $project: { email: 0, sub: 0, createdAt: 0, updatedAt: 0 },
-      },
-    ]);
+    });
 
     res.status(200).json(users);
   } catch (error) {

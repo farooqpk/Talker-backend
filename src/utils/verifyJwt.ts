@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { JwtDecodedType } from "../types/UserData";
+import { DecodedPayload } from "../types/DecodedPayload";
 
 export const verifyJwt = async (value: string) => {
   try {
@@ -7,7 +7,7 @@ export const verifyJwt = async (value: string) => {
     const decodedData = jwt.verify(
       token,
       process.env.TOKEN_SECRET!
-    ) as JwtDecodedType;
+    ) as DecodedPayload;
     if (decodedData) {
       return {userId:decodedData.userId,username:decodedData.username} 
     } else {

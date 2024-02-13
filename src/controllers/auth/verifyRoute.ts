@@ -2,8 +2,6 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
 export const verifyRoute = (req: Request, res: Response) => {
-  console.log('here..');
-  
   if (req.headers.cookie) {
     const token = req.headers.cookie.split("=")[1];
     if (token) {
