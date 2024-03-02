@@ -38,11 +38,15 @@ export const login = async (req: Request, res: Response) => {
       isUserNameAlreadyExist.username
     );
 
-    res.cookie("token", token, {
-      maxAge: 12 * 60 * 60 * 1000,
-    } as CookieOptions);
+    // res.cookie("token", token, {
+    //   maxAge: 12 * 60 * 60 * 1000,
+    // } as CookieOptions);
 
-    return res.status(200).json(true);
+    return res.status(200).send({
+      success: true,
+      message: "User logged in successfully",
+      token,
+    });
   } catch (error: any) {
     return res.status(500).json({
       success: false,

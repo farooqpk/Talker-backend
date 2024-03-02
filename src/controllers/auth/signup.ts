@@ -32,12 +32,16 @@ export const signup = async (req: Request, res: Response) => {
 
     const token = createJwtToken(user.userId, user.username);
 
-    res.cookie("token", token, {
-      // httpOnly: true,
-      maxAge: 12 * 60 * 60 * 1000,
-    } as CookieOptions);
+    // res.cookie("token", token, {
+    //   // httpOnly: true,
+    //   maxAge: 12 * 60 * 60 * 1000,
+    // } as CookieOptions);
 
-    return res.status(201).json(true);
+    return res.status(201).send({
+      success: true,
+      message: "User created successfully",
+      token,
+    });
   } catch (error: any) {
     return res.status(500).json({
       success: false,
