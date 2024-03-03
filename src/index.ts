@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 import http from "http";
 import { Server, Socket } from "socket.io";
 import { socketHandler } from "./socket/socketHandler";
-import {connectPrisma} from "./utils/prisma";
+import { connectPrisma } from "./utils/prisma";
 import { verifyJwt } from "./utils/verifyJwt";
 dotenv.config();
 
@@ -15,7 +15,7 @@ const server = http.createServer(app);
 
 app.use(
   (cors as (options: cors.CorsOptions) => express.RequestHandler)({
-    origin:true,
+    origin: true,
     credentials: true,
     methods: "GET,POST,PUT,DELETE",
   })
@@ -25,29 +25,31 @@ app.use(cookieParser());
 app.use("/", router);
 app.use(urlencoded({ extended: true }));
 
-app.get("/", (req: Request, res: Response): void => {
-  res.send("hello from server");
-});
-
-//socket io
 const io: Server = new Server(server, {
   cors: { origin: process.env.CLIENT_URL, credentials: true },
 });
 
-io.on("connection", (socket: Socket) => {
-  const token = socket.request.headers.cookie;
-  if (token) {
-    verifyJwt(token)
-      .then((payload) => {
-        socketHandler(socket, io, payload);
-      })
-      .catch((e) => {
-        io.close();
-      });
+io.on("connection", async (socket: Socket) => {
+  const tokens = socket.request.headers.cookie;
+
+  if (!tokens || !tokens.includes("accesstoken")) {
+    console.error("Socket.IO: Access token not found in headers");
+    // Handle the lack of access token (maybe emit an event or disconnect)
+    return socket.disconnect(true);
+  }
+
+  try {
+    const payload = await verifyJwt(tokens);
+    console.log("Socket.IO: Connection successfull");
+    socketHandler(socket, io, payload);
+  } catch (error) {
+    console.error("Socket.IO: Authentication failed", error);
+    // Handle authentication failure (maybe emit an event or disconnect)
+    return socket.disconnect(true);
   }
 });
 
-server.listen(process.env.PORT!, async() => {
+server.listen(process.env.PORT!, async () => {
   console.log("server connected");
-  await connectPrisma()
+  await connectPrisma();
 });

@@ -11,15 +11,16 @@ datasource db {
 }
 
 model User {
-  userId           String    @id @default(auto()) @map("_id") @db.ObjectId
-  username         String    @unique
+  userId           String         @id @default(auto()) @map("_id") @db.ObjectId
+  username         String         @unique
   password         String
   createdAt        DateTime
   // Relationships
-  messagesSent     Message[] @relation("SentMessages")
-  messagesReceived Message[] @relation("ReceivedMessages")
-  chatsUser1       Chat[]    @relation("User1Chats")
-  chatsUser2       Chat[]    @relation("User2Chats")
+  messagesSent     Message[]      @relation("SentMessages")
+  messagesReceived Message[]      @relation("ReceivedMessages")
+  chatsUser1       Chat[]         @relation("User1Chats")
+  chatsUser2       Chat[]         @relation("User2Chats")
+  RefreshToken     RefreshToken[]
 }
 
 model Chat {
@@ -48,4 +49,13 @@ model Message {
   chat        Chat     @relation(fields: [chatId], references: [chatId])
   sender      User     @relation("SentMessages", fields: [senderId], references: [userId])
   receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [userId])
+}
+
+model RefreshToken {
+  tokenId   String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  createdAt DateTime @db.Timestamp
+  expiresAt DateTime @db.Date
+  token String @unique
+  User User @relation(fields: [userId], references: [userId])
 }

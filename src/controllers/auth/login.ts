@@ -33,19 +33,37 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    const token = createJwtToken(
-      isUserNameAlreadyExist.userId,
-      isUserNameAlreadyExist.username
-    );
+    const [acessToken, refreshToken] = await Promise.all([
+      createJwtToken(
+        isUserNameAlreadyExist.userId,
+        isUserNameAlreadyExist.username,
+        "access"
+      ),
+      createJwtToken(
+        isUserNameAlreadyExist.userId,
+        isUserNameAlreadyExist.username,
+        "refresh"
+      ),
+    ]);
 
-    // res.cookie("token", token, {
-    //   maxAge: 12 * 60 * 60 * 1000,
-    // } as CookieOptions);
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        userId: isUserNameAlreadyExist.userId,
+        createdAt: new Date(),
+      },
+    });
 
     return res.status(200).send({
       success: true,
       message: "User logged in successfully",
-      token,
+      accesstoken: acessToken,
+      refreshtoken: refreshToken,
+      user: {
+        userId: isUserNameAlreadyExist.userId,
+        username: isUserNameAlreadyExist.username,
+      },
     });
   } catch (error: any) {
     return res.status(500).json({
