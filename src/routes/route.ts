@@ -9,9 +9,6 @@ import { createAccessTokenFromRefreshToken } from "../controllers/auth/refreshTo
 
 export const router: Router = Express.Router();
 
-router.get("/", verifyToken, (req, res) => {
-  res.send("hello from server");
-});
 router.post("/auth/signup", signup);
 
 router.post("/auth/login", login);
@@ -23,3 +20,5 @@ router.post("/auth/refresh", createAccessTokenFromRefreshToken);
 router.get("/getRandomUsersForSearch", verifyToken, getRandomUsers);
 
 router.get("/searchUser", verifyToken, searchUser);
+
+router.get("/chat-list", verifyToken);
