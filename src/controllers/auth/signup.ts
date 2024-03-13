@@ -27,10 +27,11 @@ export const signup = async (req: Request, res: Response) => {
         username,
         password: hashedPassword,
         createdAt: new Date(),
-      },select:{
-        userId:true,
-        username:true
-      }
+      },
+      select: {
+        userId: true,
+        username: true,
+      },
     });
 
     const [acessToken, refreshToken] = await Promise.all([
@@ -38,21 +39,12 @@ export const signup = async (req: Request, res: Response) => {
       createJwtToken(user.userId, user.username, "refresh"),
     ]);
 
-    await prisma.refreshToken.create({
-      data: {
-        token: refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        userId: user.userId,
-        createdAt: new Date(),
-      },
-    });
-
     return res.status(201).send({
       success: true,
       message: "User created successfully",
       accesstoken: acessToken,
       refreshtoken: refreshToken,
-      user
+      user,
     });
   } catch (error: any) {
     return res.status(500).json({

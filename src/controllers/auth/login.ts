@@ -46,15 +46,6 @@ export const login = async (req: Request, res: Response) => {
       ),
     ]);
 
-    await prisma.refreshToken.create({
-      data: {
-        token: refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        userId: isUserNameAlreadyExist.userId,
-        createdAt: new Date(),
-      },
-    });
-
     return res.status(200).send({
       success: true,
       message: "User logged in successfully",

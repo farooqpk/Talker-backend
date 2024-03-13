@@ -1,12 +1,11 @@
 import Express, { Router } from "express";
 import { signup } from "../controllers/auth/signup";
 import { verifyRoute } from "../controllers/auth/verifyRoute";
-import { getRandomUsers } from "../controllers/search/getRandomUsers";
 import { verifyToken } from "../middlewares/verifyToken";
-import { searchUser } from "../controllers/search/searchUser";
 import { login } from "../controllers/auth/login";
 import { createAccessTokenFromRefreshToken } from "../controllers/auth/refreshToken";
 import { messageList } from "../controllers/chat/messageList";
+import { searchUsers } from "../controllers/search/searchUser";
 
 export const router: Router = Express.Router();
 
@@ -18,9 +17,7 @@ router.get("/auth/verifyRoute", verifyRoute);
 
 router.post("/auth/refresh", createAccessTokenFromRefreshToken);
 
-router.get("/getRandomUsersForSearch", verifyToken, getRandomUsers);
-
-router.get("/searchUser", verifyToken, searchUser);
+router.get("/getUsersForSearch", verifyToken, searchUsers);
 
 router.get("/chat-list", verifyToken);
 

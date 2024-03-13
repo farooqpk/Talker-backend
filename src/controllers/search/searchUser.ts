@@ -1,14 +1,12 @@
 import { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
 
-export const searchUser = async (req: Request, res: Response) => {
+export const searchUsers = async (req: Request, res: Response) => {
   try {
-    const searchQuery = req?.query?.username;
-    if (searchQuery === "" || typeof searchQuery !== "string") {
-      return res
-        .status(400)
-        .json({ success: false, message: "search query should not be empty" });
-    }
+    const { page, search } = req.query;
+
+    const pageNumber = Number(page) || 1;
+    const searchTerm = search ? String(search) : null;
 
     const users = await prisma.user.findMany({
       where: {
@@ -17,26 +15,26 @@ export const searchUser = async (req: Request, res: Response) => {
             equals: req.userId,
           },
         },
-        username: {
-          contains: searchQuery,
-        },
+        ...(searchTerm && {
+          username: {
+            contains: searchTerm as string,
+          },
+        }),
       },
       select: {
         userId: true,
         username: true,
       },
+      take: 5,
+      skip: (pageNumber - 1) * 5,
     });
 
-    if (users.length < 1) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-
-    return res.status(200).json(users);
+    res.status(200).json(users);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Internal Server Error while searching user" });
+    console.error("Error fetching users:", error);
+    res.status(500).json({
+      success: false,
+      message: "There was an error while fetching users.",
+    });
   }
 };

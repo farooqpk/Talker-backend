@@ -17,7 +17,6 @@ model User {
   createdAt    DateTime
   // Relationships
   messagesSent Message[]      @relation("SentMessages")
-  RefreshToken RefreshToken[]
   participants Participants[]
   group        Group[]
 }
@@ -41,15 +40,6 @@ model Message {
   // Relationships
   chat        Chat     @relation(fields: [chatId], references: [chatId])
   sender      User     @relation("SentMessages", fields: [senderId], references: [userId])
-}
-
-model RefreshToken {
-  tokenId   String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
-  createdAt DateTime @db.Timestamp
-  expiresAt DateTime @db.Date
-  token     String   @unique
-  User      User     @relation(fields: [userId], references: [userId])
 }
 
 model Participants {
