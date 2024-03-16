@@ -6,6 +6,7 @@ import { login } from "../controllers/auth/login";
 import { createAccessTokenFromRefreshToken } from "../controllers/auth/refreshToken";
 import { messageList } from "../controllers/chat/messageList";
 import { searchUsers } from "../controllers/search/searchUser";
+import { findUser } from "../controllers/user/findUser";
 
 export const router: Router = Express.Router();
 
@@ -22,3 +23,5 @@ router.get("/getUsersForSearch", verifyToken, searchUsers);
 router.get("/chat-list", verifyToken);
 
 router.get("/messages/:chatId", verifyToken, messageList);
+
+router.get("/user/:userId", verifyToken, findUser);

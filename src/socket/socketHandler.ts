@@ -1,6 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { DecodedPayload } from "../types/DecodedPayload";
 import { prisma } from "../utils/prisma";
+import { ONLINE_USERS } from "..";
 
 export const socketHandler = (
   socket: Socket,
@@ -8,6 +9,14 @@ export const socketHandler = (
   decodedPayload: DecodedPayload
 ) => {
   console.log(`my username is ${decodedPayload.username}`);
+
+  socket.on("isOnline", (userId: string) => {
+    if (ONLINE_USERS.has(userId)) {
+      socket.emit("isOnline", "online");
+    } else {
+      socket.emit("isOnline", "offline");
+    }
+  });
 
   socket.on("message", async (data) => {
     const { msg, users } = data;

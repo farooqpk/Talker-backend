@@ -29,6 +29,8 @@ const io: Server = new Server(server, {
   cors: { origin: process.env.CLIENT_URL, credentials: true },
 });
 
+export const ONLINE_USERS: Map<string, string> = new Map();
+
 io.on("connection", async (socket: Socket) => {
   const tokens = socket.request.headers.cookie;
 
@@ -40,8 +42,15 @@ io.on("connection", async (socket: Socket) => {
 
   try {
     const payload = await verifyJwt(tokens);
-    console.log("Socket.IO: Connection successfull");
+    console.log("Socket.IO: Connection successful");
+    ONLINE_USERS.set(payload.userId, socket.id);
+    socket.broadcast.emit("isConnected", payload.userId);
     socketHandler(socket, io, payload);
+    socket.on("disconnect", () => {
+      ONLINE_USERS.delete(payload.userId);
+      socket.broadcast.emit("isDisconnected", payload.userId);
+      console.log("Socket.IO: Disconnected");
+    });
   } catch (error) {
     console.error("Socket.IO: Authentication failed", error);
     // Handle authentication failure (maybe emit an event or disconnect)
