@@ -20,8 +20,8 @@ router.post("/auth/refresh", createAccessTokenFromRefreshToken);
 
 router.get("/getUsersForSearch", verifyToken, searchUsers);
 
+router.get("/user/:userId", verifyToken, findUser);
+
 router.get("/chat-list", verifyToken);
 
 router.get("/messages/:chatId", verifyToken, messageList);
-
-router.get("/user/:userId", verifyToken, findUser);

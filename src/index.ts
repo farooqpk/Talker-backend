@@ -32,6 +32,7 @@ const io: Server = new Server(server, {
 export const ONLINE_USERS: Map<string, string> = new Map();
 
 io.on("connection", async (socket: Socket) => {
+  console.log(socket.handshake.auth);
   const token = socket.handshake.auth?.token;
   if (!token) {
     console.error("Socket.IO: Access token not found");

@@ -2,7 +2,6 @@ import { Server, Socket } from "socket.io";
 import { DecodedPayload } from "../types/DecodedPayload";
 import { prisma } from "../utils/prisma";
 import { ONLINE_USERS } from "..";
-import { log } from "console";
 
 export const socketHandler = (
   socket: Socket,
@@ -37,7 +36,7 @@ export const socketHandler = (
 
   socket.on("sendMessage", async (data) => {
     const { userId, message } = data;
-    const socketId = ONLINE_USERS.get(userId);
+    const recipentSocketId = ONLINE_USERS.get(userId);
     const users = [decodedPayload.userId, userId];
 
     const isAlreadyChatExist = await prisma.chat.findFirst({
@@ -64,8 +63,8 @@ export const socketHandler = (
         },
       });
 
-      socketId &&
-        io.to(socketId).emit("sendMessage", {
+      recipentSocketId &&
+        io.to([recipentSocketId, socket.id]).emit("sendMessage", {
           ...msg,
         });
     } else {
@@ -98,8 +97,8 @@ export const socketHandler = (
         },
       });
 
-      socketId &&
-        io.to(socketId).emit("sendMessage", {
+      recipentSocketId &&
+        io.to([recipentSocketId, socket.id]).emit("sendMessage", {
           ...msg,
         });
     }

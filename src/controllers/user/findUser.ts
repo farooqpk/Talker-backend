@@ -14,7 +14,25 @@ export const findUser = async (req: Request, res: Response) => {
       },
     });
 
-    res.status(200).json(user);
+    const chat = await prisma.chat.findFirstOrThrow({
+      where: {
+        participants: {
+          some: {
+            userId: {
+              in: [userId, req.userId],
+            },
+          },
+        },
+      },
+      select: {
+        chatId: true,
+      },
+    });
+
+    res.status(200).json({
+      ...user,
+      ...chat,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
