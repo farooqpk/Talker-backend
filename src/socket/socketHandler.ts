@@ -18,6 +18,22 @@ export const socketHandler = (
     }
   });
 
+  socket.on("isTyping", (data) => {
+    const { toUserId } = data;
+    if (ONLINE_USERS.has(toUserId) && toUserId !== decodedPayload.userId) {
+      const socketId = ONLINE_USERS.get(toUserId);
+      socketId && io.to(socketId).emit("isTyping", decodedPayload.userId);
+    }
+  });
+
+  socket.on("isNotTyping", (data) => {
+    const { toUserId } = data;
+    if (ONLINE_USERS.has(toUserId) && toUserId !== decodedPayload.userId) {
+      const socketId = ONLINE_USERS.get(toUserId);
+      socketId && io.to(socketId).emit("isNotTyping", decodedPayload.userId);
+    }
+  });
+
   socket.on("message", async (data) => {
     const { msg, users } = data;
 
