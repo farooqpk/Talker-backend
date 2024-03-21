@@ -32,16 +32,13 @@ const io: Server = new Server(server, {
 export const ONLINE_USERS: Map<string, string> = new Map();
 
 io.on("connection", async (socket: Socket) => {
-  const tokens = socket.request.headers.cookie;
-
-  if (!tokens || !tokens.includes("accesstoken")) {
-    console.error("Socket.IO: Access token not found in headers");
-    // Handle the lack of access token (maybe emit an event or disconnect)
+  const token = socket.handshake.auth?.token;
+  if (!token) {
+    console.error("Socket.IO: Access token not found");
     return socket.disconnect(true);
   }
-
   try {
-    const payload = await verifyJwt(tokens);
+    const payload = await verifyJwt(token);
     console.log("Socket.IO: Connection successful");
     ONLINE_USERS.set(payload.userId, socket.id);
     socket.broadcast.emit("isConnected", payload.userId);
@@ -53,7 +50,6 @@ io.on("connection", async (socket: Socket) => {
     });
   } catch (error) {
     console.error("Socket.IO: Authentication failed", error);
-    // Handle authentication failure (maybe emit an event or disconnect)
     return socket.disconnect(true);
   }
 });

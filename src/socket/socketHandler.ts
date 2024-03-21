@@ -2,6 +2,7 @@ import { Server, Socket } from "socket.io";
 import { DecodedPayload } from "../types/DecodedPayload";
 import { prisma } from "../utils/prisma";
 import { ONLINE_USERS } from "..";
+import { log } from "console";
 
 export const socketHandler = (
   socket: Socket,
@@ -34,8 +35,10 @@ export const socketHandler = (
     }
   });
 
-  socket.on("message", async (data) => {
-    const { msg, users } = data;
+  socket.on("sendMessage", async (data) => {
+    const { userId, message } = data;
+    const socketId = ONLINE_USERS.get(userId);
+    const users = [decodedPayload.userId, userId];
 
     const isAlreadyChatExist = await prisma.chat.findFirst({
       where: {
@@ -50,9 +53,9 @@ export const socketHandler = (
     });
 
     if (isAlreadyChatExist) {
-      await prisma.message.create({
+      const msg = await prisma.message.create({
         data: {
-          content: msg,
+          content: message,
           createdAt: new Date(),
           contentType: "text",
           chatId: isAlreadyChatExist.chatId,
@@ -61,11 +64,10 @@ export const socketHandler = (
         },
       });
 
-      io.to(isAlreadyChatExist.chatId).emit("message", {
-        msg,
-        chatId: isAlreadyChatExist.chatId,
-        senderId: decodedPayload.userId,
-      });
+      socketId &&
+        io.to(socketId).emit("sendMessage", {
+          ...msg,
+        });
     } else {
       const chat = await prisma.chat.create({
         data: {
@@ -85,9 +87,9 @@ export const socketHandler = (
         })
       );
 
-      await prisma.message.create({
+      const msg = await prisma.message.create({
         data: {
-          content: msg,
+          content: message,
           createdAt: new Date(),
           contentType: "text",
           chatId: chat.chatId,
@@ -96,11 +98,10 @@ export const socketHandler = (
         },
       });
 
-      io.to(chat.chatId).emit("message", {
-        msg,
-        chatId: chat.chatId,
-        senderId: decodedPayload.userId,
-      });
+      socketId &&
+        io.to(socketId).emit("sendMessage", {
+          ...msg,
+        });
     }
   });
 };
