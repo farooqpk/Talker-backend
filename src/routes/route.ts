@@ -7,6 +7,7 @@ import { createAccessTokenFromRefreshToken } from "../controllers/auth/refreshTo
 import { messageList } from "../controllers/chat/messageList";
 import { searchUsers } from "../controllers/search/searchUser";
 import { findUser } from "../controllers/user/findUser";
+import { chatList } from "../controllers/chat/chatList";
 
 export const router: Router = Express.Router();
 
@@ -22,6 +23,6 @@ router.get("/getUsersForSearch", verifyToken, searchUsers);
 
 router.get("/user/:userId", verifyToken, findUser);
 
-router.get("/chat-list", verifyToken);
+router.get("/chat-list", verifyToken,chatList);
 
 router.get("/messages/:chatId", verifyToken, messageList);

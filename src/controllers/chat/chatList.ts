@@ -22,6 +22,15 @@ export const chatList = async (req: Request, res: Response) => {
             createdAt: "desc",
           },
           take: 1,
+          select: {
+            content: true,
+            contentType: true,
+            createdAt: true,
+          },
+        },
+        participants: {
+          where: { userId: { not: req.userId } },
+          select: { user: { select: { username: true, userId: true } } },
         },
       },
     });
