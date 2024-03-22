@@ -14,13 +14,13 @@ export const findUser = async (req: Request, res: Response) => {
       },
     });
 
-    const chat = await prisma.chat.findFirstOrThrow({
+    const chat = await prisma.chat.findFirst({
       where: {
         participants: {
-          some: {
+          every: {
             userId: {
               in: [userId, req.userId],
-            },
+            }
           },
         },
       },
@@ -34,6 +34,8 @@ export const findUser = async (req: Request, res: Response) => {
       ...chat,
     });
   } catch (error) {
+    console.log(error);
+    
     res.status(500).json({
       success: false,
       message: "there is an error while fetching user",

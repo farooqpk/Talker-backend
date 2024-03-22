@@ -41,13 +41,11 @@ export const socketHandler = (
 
     const isAlreadyChatExist = await prisma.chat.findFirst({
       where: {
-        participants: {
-          some: {
-            userId: {
-              in: users,
-            },
-          },
-        },
+       participants:{
+        every:{
+          userId: {in: users}
+        }
+       }
       },
     });
 
@@ -63,10 +61,13 @@ export const socketHandler = (
         },
       });
 
-      recipentSocketId &&
-        io.to([recipentSocketId, socket.id]).emit("sendMessage", {
-          ...msg,
-        });
+      recipentSocketId
+        ? io.to([recipentSocketId, socket.id]).emit("sendMessage", {
+            ...msg,
+          })
+        : io.to(socket.id).emit("sendMessage", {
+            ...msg,
+          });
     } else {
       const chat = await prisma.chat.create({
         data: {
@@ -97,10 +98,13 @@ export const socketHandler = (
         },
       });
 
-      recipentSocketId &&
-        io.to([recipentSocketId, socket.id]).emit("sendMessage", {
-          ...msg,
-        });
+      recipentSocketId
+        ? io.to([recipentSocketId, socket.id]).emit("sendMessage", {
+            ...msg,
+          })
+        : io.to(socket.id).emit("sendMessage", {
+            ...msg,
+          });
     }
   });
 };
