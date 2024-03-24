@@ -37,7 +37,6 @@ io.on("connection", async (socket: Socket) => {
     console.error("Socket.IO: Access token not found");
     socket.emit("unauthorized", "Access token not found");
     socket.disconnect(true);
-    return;
   }
   try {
     const payload = await verifyJwt(token);
