@@ -11,6 +11,7 @@ export const findUser = async (req: Request, res: Response) => {
       select: {
         userId: true,
         username: true,
+        publicKey: true,
       },
     });
 

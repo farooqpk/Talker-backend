@@ -14,11 +14,11 @@ model User {
   userId       String         @id @default(auto()) @map("_id") @db.ObjectId
   username     String         @unique
   password     String
+  publicKey    String
   createdAt    DateTime
   // Relationships
   messagesSent Message[]      @relation("SentMessages")
   participants Participants[]
-  group        Group[]
 }
 
 model Chat {
@@ -30,16 +30,17 @@ model Chat {
 }
 
 model Message {
-  messageId   String   @id @default(auto()) @map("_id") @db.ObjectId
-  chatId      String   @db.ObjectId
-  senderId    String   @db.ObjectId
-  contentType String // 'text', 'voice', etc.
-  content     String // For text messages
-  mediaUrl    String // For voice messages or attachments
-  createdAt   DateTime
+  messageId           String   @id @default(auto()) @map("_id") @db.ObjectId
+  chatId              String   @db.ObjectId
+  senderId            String   @db.ObjectId
+  contentType         String // 'text', 'voice', etc.
+  contentForRecipient String // For text messages
+  contentForSender    String
+  mediaUrl            String // For voice messages or attachments
+  createdAt           DateTime
   // Relationships
-  chat        Chat     @relation(fields: [chatId], references: [chatId])
-  sender      User     @relation("SentMessages", fields: [senderId], references: [userId])
+  chat                Chat     @relation(fields: [chatId], references: [chatId])
+  sender              User     @relation("SentMessages", fields: [senderId], references: [userId])
 }
 
 model Participants {
@@ -47,17 +48,7 @@ model Participants {
   chatId        String   @db.ObjectId
   userId        String   @db.ObjectId
   createdAt     DateTime @db.Timestamp
-  groupId       String?  @db.ObjectId
 
-  chat  Chat   @relation(fields: [chatId], references: [chatId])
-  user  User   @relation(fields: [userId], references: [userId])
-  group Group? @relation(fields: [groupId], references: [groupId])
-}
-
-model Group {
-  groupId      String         @id @default(auto()) @map("_id") @db.ObjectId
-  adminId      String         @db.ObjectId
-  name         String
-  participants Participants[]
-  admin        User           @relation(fields: [adminId], references: [userId])
+  chat Chat @relation(fields: [chatId], references: [chatId])
+  user User @relation(fields: [userId], references: [userId])
 }

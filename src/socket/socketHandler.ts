@@ -41,18 +41,19 @@ export const socketHandler = (
 
     const isAlreadyChatExist = await prisma.chat.findFirst({
       where: {
-       participants:{
-        every:{
-          userId: {in: users}
-        }
-       }
+        participants: {
+          every: {
+            userId: { in: users },
+          },
+        },
       },
     });
 
     if (isAlreadyChatExist) {
       const msg = await prisma.message.create({
         data: {
-          content: message,
+          contentForRecipient: message.encryptedMessageForRecipient,
+          contentForSender: message.encryptedMessageForSender,
           createdAt: new Date(),
           contentType: "text",
           chatId: isAlreadyChatExist.chatId,
@@ -89,7 +90,8 @@ export const socketHandler = (
 
       const msg = await prisma.message.create({
         data: {
-          content: message,
+          contentForRecipient: message.encryptedMessageForRecipient,
+          contentForSender: message.encryptedMessageForSender,
           createdAt: new Date(),
           contentType: "text",
           chatId: chat.chatId,

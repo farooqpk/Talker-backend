@@ -7,6 +7,7 @@ export const signup = async (req: Request, res: Response) => {
   try {
     const username = req.body.username;
     const password = req.body.password;
+    const publicKey = req.body.publicKey;
 
     const isUserNameAlreadyExist = await prisma.user.findUnique({
       where: {
@@ -26,6 +27,7 @@ export const signup = async (req: Request, res: Response) => {
       data: {
         username,
         password: hashedPassword,
+        publicKey,
         createdAt: new Date(),
       },
       select: {
