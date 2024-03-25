@@ -25,9 +25,8 @@ export const chatList = async (req: Request, res: Response) => {
           select: {
             contentForRecipient: true,
             contentForSender: true,
-            contentType: true,
             createdAt: true,
-            senderId:true
+            senderId: true,
           },
         },
         participants: {

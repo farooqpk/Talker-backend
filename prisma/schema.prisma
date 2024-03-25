@@ -33,10 +33,8 @@ model Message {
   messageId           String   @id @default(auto()) @map("_id") @db.ObjectId
   chatId              String   @db.ObjectId
   senderId            String   @db.ObjectId
-  contentType         String // 'text', 'voice', etc.
   contentForRecipient String // For text messages
   contentForSender    String
-  mediaUrl            String // For voice messages or attachments
   createdAt           DateTime
   // Relationships
   chat                Chat     @relation(fields: [chatId], references: [chatId])

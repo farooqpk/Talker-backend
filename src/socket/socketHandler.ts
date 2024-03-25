@@ -55,9 +55,7 @@ export const socketHandler = (
           contentForRecipient: message.encryptedMessageForRecipient,
           contentForSender: message.encryptedMessageForSender,
           createdAt: new Date(),
-          contentType: "text",
           chatId: isAlreadyChatExist.chatId,
-          mediaUrl: "",
           senderId: decodedPayload.userId,
         },
       });
@@ -93,9 +91,7 @@ export const socketHandler = (
           contentForRecipient: message.encryptedMessageForRecipient,
           contentForSender: message.encryptedMessageForSender,
           createdAt: new Date(),
-          contentType: "text",
           chatId: chat.chatId,
-          mediaUrl: "",
           senderId: decodedPayload.userId,
         },
       });
