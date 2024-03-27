@@ -30,15 +30,17 @@ model Chat {
 }
 
 model Message {
-  messageId           String   @id @default(auto()) @map("_id") @db.ObjectId
-  chatId              String   @db.ObjectId
-  senderId            String   @db.ObjectId
-  contentForRecipient String // For text messages
-  contentForSender    String
-  createdAt           DateTime
+  messageId                        String   @id @default(auto()) @map("_id") @db.ObjectId
+  chatId                           String   @db.ObjectId
+  senderId                         String   @db.ObjectId
+  contentForRecipient              String
+  contentForSender                 String
+  encryptedSymetricKeyForRecipient String
+  encryptedSymetricKeyForSender    String
+  createdAt                        DateTime
   // Relationships
-  chat                Chat     @relation(fields: [chatId], references: [chatId])
-  sender              User     @relation("SentMessages", fields: [senderId], references: [userId])
+  chat                             Chat     @relation(fields: [chatId], references: [chatId])
+  sender                           User     @relation("SentMessages", fields: [senderId], references: [userId])
 }
 
 model Participants {

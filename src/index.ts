@@ -42,6 +42,7 @@ io.on("connection", async (socket: Socket) => {
   try {
     const payload = await verifyJwt(token);
     console.log("Socket.IO: Connection successful");
+    console.count();
     ONLINE_USERS.set(payload.userId, socket.id);
     socket.broadcast.emit("isConnected", payload.userId);
     socketHandler(socket, io, payload);

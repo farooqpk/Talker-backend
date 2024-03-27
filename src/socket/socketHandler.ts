@@ -57,16 +57,29 @@ export const socketHandler = (
           createdAt: new Date(),
           chatId: isAlreadyChatExist.chatId,
           senderId: decodedPayload.userId,
+          encryptedSymetricKeyForRecipient:
+            message.encryptedSymetricKeyForRecipient,
+          encryptedSymetricKeyForSender: message.encryptedSymetricKeyForSender,
         },
       });
 
-      recipentSocketId
-        ? io.to([recipentSocketId, socket.id]).emit("sendMessage", {
-            ...msg,
-          })
-        : io.to(socket.id).emit("sendMessage", {
-            ...msg,
-          });
+      if (recipentSocketId) {
+        io.to([recipentSocketId, socket.id]).emit("sendMessage", {
+          ...msg,
+        });
+        io.to([recipentSocketId, socket.id]).emit("updateChatList", {
+          isRefetchChatList: false,
+          message: msg,
+        });
+      } else {
+        io.to(socket.id).emit("sendMessage", {
+          ...msg,
+        });
+        io.to([socket.id]).emit("updateChatList", {
+          isRefetchChatList: false,
+          message: msg,
+        });
+      }
     } else {
       const chat = await prisma.chat.create({
         data: {
@@ -93,16 +106,28 @@ export const socketHandler = (
           createdAt: new Date(),
           chatId: chat.chatId,
           senderId: decodedPayload.userId,
+          encryptedSymetricKeyForRecipient:
+            message.encryptedSymetricKeyForRecipient,
+          encryptedSymetricKeyForSender: message.encryptedSymetricKeyForSender,
         },
       });
 
-      recipentSocketId
-        ? io.to([recipentSocketId, socket.id]).emit("sendMessage", {
-            ...msg,
-          })
-        : io.to(socket.id).emit("sendMessage", {
-            ...msg,
-          });
+      if (recipentSocketId) {
+        io.to([recipentSocketId, socket.id]).emit("sendMessage", {
+          ...msg,
+        });
+
+        io.to([recipentSocketId, socket.id]).emit("updateChatList", {
+          isRefetchChatList: true,
+        });
+      } else {
+        io.to(socket.id).emit("sendMessage", {
+          ...msg,
+        });
+        io.to([socket.id]).emit("updateChatList", {
+          isRefetchChatList: true,
+        });
+      }
     }
   });
 };

@@ -27,6 +27,8 @@ export const chatList = async (req: Request, res: Response) => {
             contentForSender: true,
             createdAt: true,
             senderId: true,
+            encryptedSymetricKeyForRecipient:true,
+            encryptedSymetricKeyForSender:true
           },
         },
         participants: {
