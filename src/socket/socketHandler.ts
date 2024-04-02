@@ -49,8 +49,32 @@ export const socketHandler = (
       },
     });
 
+    const quickMsg = {
+      contentForRecipient: message.encryptedMessageForRecipient,
+      contentForSender: message.encryptedMessageForSender,
+      createdAt: new Date(),
+      chatId: isAlreadyChatExist?.chatId,
+      senderId: decodedPayload.userId,
+      encryptedSymetricKeyForRecipient:
+        message.encryptedSymetricKeyForRecipient,
+      encryptedSymetricKeyForSender: message.encryptedSymetricKeyForSender,
+      contentType: message.contentType,
+    };
+
+    io.to(recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]).emit(
+      "sendMessage",
+      quickMsg
+    );
+
     if (isAlreadyChatExist) {
-      const msg = await prisma.message.create({
+      io.to(
+        recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
+      ).emit("updateChatList", {
+        isRefetchChatList: false,
+        message: quickMsg,
+      });
+
+      await prisma.message.create({
         data: {
           contentForRecipient: message.encryptedMessageForRecipient,
           contentForSender: message.encryptedMessageForSender,
@@ -60,26 +84,9 @@ export const socketHandler = (
           encryptedSymetricKeyForRecipient:
             message.encryptedSymetricKeyForRecipient,
           encryptedSymetricKeyForSender: message.encryptedSymetricKeyForSender,
+          contentType: message.contentType,
         },
       });
-
-      if (recipentSocketId) {
-        io.to([recipentSocketId, socket.id]).emit("sendMessage", {
-          ...msg,
-        });
-        io.to([recipentSocketId, socket.id]).emit("updateChatList", {
-          isRefetchChatList: false,
-          message: msg,
-        });
-      } else {
-        io.to(socket.id).emit("sendMessage", {
-          ...msg,
-        });
-        io.to([socket.id]).emit("updateChatList", {
-          isRefetchChatList: false,
-          message: msg,
-        });
-      }
     } else {
       const chat = await prisma.chat.create({
         data: {
@@ -99,7 +106,7 @@ export const socketHandler = (
         })
       );
 
-      const msg = await prisma.message.create({
+      await prisma.message.create({
         data: {
           contentForRecipient: message.encryptedMessageForRecipient,
           contentForSender: message.encryptedMessageForSender,
@@ -109,25 +116,15 @@ export const socketHandler = (
           encryptedSymetricKeyForRecipient:
             message.encryptedSymetricKeyForRecipient,
           encryptedSymetricKeyForSender: message.encryptedSymetricKeyForSender,
+          contentType: message.contentType,
         },
       });
 
-      if (recipentSocketId) {
-        io.to([recipentSocketId, socket.id]).emit("sendMessage", {
-          ...msg,
-        });
-
-        io.to([recipentSocketId, socket.id]).emit("updateChatList", {
-          isRefetchChatList: true,
-        });
-      } else {
-        io.to(socket.id).emit("sendMessage", {
-          ...msg,
-        });
-        io.to([socket.id]).emit("updateChatList", {
-          isRefetchChatList: true,
-        });
-      }
+      io.to(
+        recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
+      ).emit("updateChatList", {
+        isRefetchChatList: true,
+      });
     }
   });
 };

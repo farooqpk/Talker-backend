@@ -29,18 +29,24 @@ model Chat {
   participants Participants[]
 }
 
+enum ContentType {
+  TEXT
+  AUDIO
+}
+
 model Message {
-  messageId                        String   @id @default(auto()) @map("_id") @db.ObjectId
-  chatId                           String   @db.ObjectId
-  senderId                         String   @db.ObjectId
+  messageId                        String      @id @default(auto()) @map("_id") @db.ObjectId
+  chatId                           String      @db.ObjectId
+  senderId                         String      @db.ObjectId
   contentForRecipient              String
   contentForSender                 String
+  contentType                      ContentType
   encryptedSymetricKeyForRecipient String
   encryptedSymetricKeyForSender    String
   createdAt                        DateTime
   // Relationships
-  chat                             Chat     @relation(fields: [chatId], references: [chatId])
-  sender                           User     @relation("SentMessages", fields: [senderId], references: [userId])
+  chat                             Chat        @relation(fields: [chatId], references: [chatId])
+  sender                           User        @relation("SentMessages", fields: [senderId], references: [userId])
 }
 
 model Participants {
