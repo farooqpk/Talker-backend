@@ -30,7 +30,6 @@ const io: Server = new Server(server, {
 });
 
 export const ONLINE_USERS_SOCKET: Map<string, string> = new Map();
-export const ONLINE_USERS_PEER: Map<string, string> = new Map();
 
 io.on("connection", async (socket: Socket) => {
   const token = socket.handshake.auth?.token;
@@ -48,7 +47,6 @@ io.on("connection", async (socket: Socket) => {
     socketHandler(socket, io, payload);
     socket.on("disconnect", () => {
       ONLINE_USERS_SOCKET.delete(payload.userId);
-      ONLINE_USERS_PEER.delete(payload.userId);
       socket.broadcast.emit("isDisconnected", payload.userId);
       console.log("Socket.IO: Disconnected");
     });

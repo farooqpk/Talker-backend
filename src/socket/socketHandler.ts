@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { DecodedPayload } from "../types/DecodedPayload";
 import { prisma } from "../utils/prisma";
-import { ONLINE_USERS_PEER, ONLINE_USERS_SOCKET } from "..";
+import { ONLINE_USERS_SOCKET } from "..";
 
 export const socketHandler = (
   socket: Socket,
@@ -131,49 +131,6 @@ export const socketHandler = (
       ).emit("updateChatList", {
         isRefetchChatList: true,
       });
-    }
-  });
-
-  socket.on("storePeerId", (peerId: string) => {
-    console.log("storePeerId", peerId);
-    ONLINE_USERS_PEER.set(decodedPayload.userId, peerId);
-  });
-
-  socket.on("getAnotherUserPeerId", (userId: string) => {
-    const peerId = ONLINE_USERS_PEER.get(userId);
-    socket.emit("getAnotherUserPeerId", peerId);
-  });
-
-  socket.on("removePeerId", () => {
-    ONLINE_USERS_PEER.delete(decodedPayload.userId);
-  });
-
-  socket.on("answerOrRejectCall", (data) => {
-    const { toUserId } = data;
-    console.log(data);
-
-    if (
-      ONLINE_USERS_SOCKET.has(toUserId) &&
-      toUserId !== decodedPayload.userId
-    ) {
-      const socketId = ONLINE_USERS_SOCKET.get(toUserId);
-      socketId &&
-        io.to(socketId).emit("answerOrRejectCall", {
-          fromUserId: decodedPayload.userId,
-          fromUsername: decodedPayload.username,
-          callType: data.callType,
-        });
-    }
-  });
-
-  socket.on("callAnswered", (data) => {
-    const { toUserId } = data;
-    if (
-      ONLINE_USERS_SOCKET.has(toUserId) &&
-      toUserId !== decodedPayload.userId
-    ) {
-      const socketId = ONLINE_USERS_SOCKET.get(toUserId);
-      socketId && io.to(socketId).emit("callAnswered");
     }
   });
 };

@@ -3,10 +3,12 @@ name: Node.js Build
 on:
   push:
     branches:
-      - main  # Change to your main branch name
+      - main 
+      - master
   pull_request:
     branches:
-      - main  # Change to your main branch name
+      - main 
+      - master 
 
 jobs:
   build:
