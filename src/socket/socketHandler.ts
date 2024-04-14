@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { DecodedPayload } from "../types/DecodedPayload";
 import { prisma } from "../utils/prisma";
-import { ONLINE_USERS } from "..";
+import { ONLINE_USERS_PEER, ONLINE_USERS_SOCKET } from "..";
 
 export const socketHandler = (
   socket: Socket,
@@ -11,7 +11,7 @@ export const socketHandler = (
   console.log(`my username is ${decodedPayload.username}`);
 
   socket.on("isOnline", (userId: string) => {
-    if (ONLINE_USERS.has(userId)) {
+    if (ONLINE_USERS_SOCKET.has(userId)) {
       socket.emit("isOnline", "online");
     } else {
       socket.emit("isOnline", "offline");
@@ -20,23 +20,29 @@ export const socketHandler = (
 
   socket.on("isTyping", (data) => {
     const { toUserId } = data;
-    if (ONLINE_USERS.has(toUserId) && toUserId !== decodedPayload.userId) {
-      const socketId = ONLINE_USERS.get(toUserId);
+    if (
+      ONLINE_USERS_SOCKET.has(toUserId) &&
+      toUserId !== decodedPayload.userId
+    ) {
+      const socketId = ONLINE_USERS_SOCKET.get(toUserId);
       socketId && io.to(socketId).emit("isTyping", decodedPayload.userId);
     }
   });
 
   socket.on("isNotTyping", (data) => {
     const { toUserId } = data;
-    if (ONLINE_USERS.has(toUserId) && toUserId !== decodedPayload.userId) {
-      const socketId = ONLINE_USERS.get(toUserId);
+    if (
+      ONLINE_USERS_SOCKET.has(toUserId) &&
+      toUserId !== decodedPayload.userId
+    ) {
+      const socketId = ONLINE_USERS_SOCKET.get(toUserId);
       socketId && io.to(socketId).emit("isNotTyping", decodedPayload.userId);
     }
   });
 
   socket.on("sendMessage", async (data) => {
     const { userId, message } = data;
-    const recipentSocketId = ONLINE_USERS.get(userId);
+    const recipentSocketId = ONLINE_USERS_SOCKET.get(userId);
     const users = [decodedPayload.userId, userId];
 
     const isAlreadyChatExist = await prisma.chat.findFirst({
@@ -125,6 +131,49 @@ export const socketHandler = (
       ).emit("updateChatList", {
         isRefetchChatList: true,
       });
+    }
+  });
+
+  socket.on("storePeerId", (peerId: string) => {
+    console.log("storePeerId", peerId);
+    ONLINE_USERS_PEER.set(decodedPayload.userId, peerId);
+  });
+
+  socket.on("getAnotherUserPeerId", (userId: string) => {
+    const peerId = ONLINE_USERS_PEER.get(userId);
+    socket.emit("getAnotherUserPeerId", peerId);
+  });
+
+  socket.on("removePeerId", () => {
+    ONLINE_USERS_PEER.delete(decodedPayload.userId);
+  });
+
+  socket.on("answerOrRejectCall", (data) => {
+    const { toUserId } = data;
+    console.log(data);
+
+    if (
+      ONLINE_USERS_SOCKET.has(toUserId) &&
+      toUserId !== decodedPayload.userId
+    ) {
+      const socketId = ONLINE_USERS_SOCKET.get(toUserId);
+      socketId &&
+        io.to(socketId).emit("answerOrRejectCall", {
+          fromUserId: decodedPayload.userId,
+          fromUsername: decodedPayload.username,
+          callType: data.callType,
+        });
+    }
+  });
+
+  socket.on("callAnswered", (data) => {
+    const { toUserId } = data;
+    if (
+      ONLINE_USERS_SOCKET.has(toUserId) &&
+      toUserId !== decodedPayload.userId
+    ) {
+      const socketId = ONLINE_USERS_SOCKET.get(toUserId);
+      socketId && io.to(socketId).emit("callAnswered");
     }
   });
 };

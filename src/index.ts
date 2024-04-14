@@ -29,7 +29,8 @@ const io: Server = new Server(server, {
   cors: { origin: process.env.CLIENT_URL, credentials: true },
 });
 
-export const ONLINE_USERS: Map<string, string> = new Map();
+export const ONLINE_USERS_SOCKET: Map<string, string> = new Map();
+export const ONLINE_USERS_PEER: Map<string, string> = new Map();
 
 io.on("connection", async (socket: Socket) => {
   const token = socket.handshake.auth?.token;
@@ -42,12 +43,12 @@ io.on("connection", async (socket: Socket) => {
   try {
     const payload = await verifyJwt(token);
     console.log("Socket.IO: Connection successful");
-    console.count();
-    ONLINE_USERS.set(payload.userId, socket.id);
+    ONLINE_USERS_SOCKET.set(payload.userId, socket.id);
     socket.broadcast.emit("isConnected", payload.userId);
     socketHandler(socket, io, payload);
     socket.on("disconnect", () => {
-      ONLINE_USERS.delete(payload.userId);
+      ONLINE_USERS_SOCKET.delete(payload.userId);
+      ONLINE_USERS_PEER.delete(payload.userId);
       socket.broadcast.emit("isDisconnected", payload.userId);
       console.log("Socket.IO: Disconnected");
     });
