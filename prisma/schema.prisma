@@ -19,14 +19,18 @@ model User {
   // Relationships
   messagesSent Message[]      @relation("SentMessages")
   participants Participants[]
+  Group        Group[]
+  GroupKey     GroupKey[]
 }
 
 model Chat {
   chatId       String         @id @default(auto()) @map("_id") @db.ObjectId
   createdAt    DateTime
+  isGroup      Boolean        @default(false)
   // Relationships
   messages     Message[]
   participants Participants[]
+  Group        Group[]
 }
 
 enum ContentType {
@@ -38,11 +42,14 @@ model Message {
   messageId                        String      @id @default(auto()) @map("_id") @db.ObjectId
   chatId                           String      @db.ObjectId
   senderId                         String      @db.ObjectId
-  contentForRecipient              String
-  contentForSender                 String
+  // for private chat starts
+  contentForRecipient              String?
+  contentForSender                 String?
   contentType                      ContentType
-  encryptedSymetricKeyForRecipient String
-  encryptedSymetricKeyForSender    String
+  encryptedSymetricKeyForRecipient String?
+  encryptedSymetricKeyForSender    String?
+  // for private chat ends
+  contentForGroup                  String?
   createdAt                        DateTime
   // Relationships
   chat                             Chat        @relation(fields: [chatId], references: [chatId])
@@ -57,4 +64,27 @@ model Participants {
 
   chat Chat @relation(fields: [chatId], references: [chatId])
   user User @relation(fields: [userId], references: [userId])
+}
+
+model Group {
+  groupId     String     @id @default(auto()) @map("_id") @db.ObjectId
+  chatId      String     @db.ObjectId
+  name        String
+  description String
+  createdAt   DateTime
+  adminId     String     @db.ObjectId
+  // Relationships
+  Chat        Chat       @relation(fields: [chatId], references: [chatId])
+  GroupKey    GroupKey[]
+  admin       User       @relation(fields: [adminId], references: [userId])
+}
+
+model GroupKey {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  groupId           String   @db.ObjectId
+  encryptedGroupKey String
+  userId            String   @db.ObjectId
+  createdAt         DateTime @db.Timestamp
+  User              User     @relation(fields: [userId], references: [userId])
+  Group             Group    @relation(fields: [groupId], references: [groupId])
 }
