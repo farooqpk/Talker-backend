@@ -11,6 +11,7 @@ import { chatList } from "../controllers/chat/chatList";
 import { findUsersForCreateGroup } from "../controllers/group/findUsersForCreateGroup";
 import { createGroup } from "../controllers/group/createGroup";
 import { findPublicKeys } from "../controllers/group/findPublicKeys";
+import { groupDetails } from "../controllers/group/groupDetails";
 
 export const router: Router = Express.Router();
 
@@ -39,3 +40,5 @@ router.get(
 router.post("/create-group", verifyToken, createGroup);
 
 router.post("/get-public-keys", verifyToken, findPublicKeys);
+
+router.get("/group/:groupId", verifyToken, groupDetails);

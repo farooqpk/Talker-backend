@@ -27,14 +27,30 @@ export const chatList = async (req: Request, res: Response) => {
             contentForSender: true,
             createdAt: true,
             senderId: true,
-            encryptedSymetricKeyForRecipient:true,
-            encryptedSymetricKeyForSender:true,
+            encryptedSymetricKeyForRecipient: true,
+            encryptedSymetricKeyForSender: true,
             contentType: true,
+            contentForGroup: true,
           },
         },
         participants: {
           where: { userId: { not: req.userId } },
           select: { user: { select: { username: true, userId: true } } },
+        },
+        Group: {
+          select: {
+            groupId:true,
+            name: true,
+            description:true,
+            GroupKey: {
+              where: {
+                userId: req.userId,
+              },
+              select: {
+                encryptedGroupKey: true,
+              },
+            },
+          },
         },
       },
     });
