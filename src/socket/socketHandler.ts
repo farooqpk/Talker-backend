@@ -55,32 +55,8 @@ export const socketHandler = (
       },
     });
 
-    const quickMsg = {
-      contentForRecipient: message.encryptedMessageForRecipient,
-      contentForSender: message.encryptedMessageForSender,
-      createdAt: new Date(),
-      chatId: isAlreadyChatExist?.chatId,
-      senderId: decodedPayload.userId,
-      encryptedSymetricKeyForRecipient:
-        message.encryptedSymetricKeyForRecipient,
-      encryptedSymetricKeyForSender: message.encryptedSymetricKeyForSender,
-      contentType: message.contentType,
-    };
-
-    io.to(recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]).emit(
-      "sendMessage",
-      quickMsg
-    );
-
     if (isAlreadyChatExist) {
-      io.to(
-        recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
-      ).emit("updateChatList", {
-        isRefetchChatList: false,
-        message: quickMsg,
-      });
-
-      await prisma.message.create({
+      const msg = await prisma.message.create({
         data: {
           contentForRecipient: message.encryptedMessageForRecipient,
           contentForSender: message.encryptedMessageForSender,
@@ -92,6 +68,13 @@ export const socketHandler = (
           encryptedSymetricKeyForSender: message.encryptedSymetricKeyForSender,
           contentType: message.contentType,
         },
+      });
+
+      io.to(
+        recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
+      ).emit("sendMessage", {
+        isRefetchChatList: false,
+        message: msg,
       });
     } else {
       const chat = await prisma.chat.create({
@@ -112,7 +95,7 @@ export const socketHandler = (
         })
       );
 
-      await prisma.message.create({
+      const msg = await prisma.message.create({
         data: {
           contentForRecipient: message.encryptedMessageForRecipient,
           contentForSender: message.encryptedMessageForSender,
@@ -125,12 +108,75 @@ export const socketHandler = (
           contentType: message.contentType,
         },
       });
-
       io.to(
         recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
-      ).emit("updateChatList", {
+      ).emit("sendMessage", {
         isRefetchChatList: true,
+        message: msg,
       });
     }
+  });
+
+  socket.on("joinGroup", async ({ groupIds }) => {
+    console.log("joinGroup", groupIds);
+    const isUserExistInGroup = await prisma.group.findFirst({
+      where: {
+        groupId: {
+          in: groupIds,
+        },
+        Chat: {
+          participants: {
+            some: {
+              userId: decodedPayload.userId,
+            },
+          },
+        },
+      },
+    });
+
+    if (isUserExistInGroup) {
+      socket.join(groupIds);
+    }
+  });
+
+  socket.on("leaveGroup", ({ groupIds }) => {
+    socket.leave(groupIds);
+    console.log("leaveGroup", groupIds);
+  });
+
+  socket.on("sendMessageForGroup", async ({ groupId, message }) => {
+    const isUserExistInGroup = await prisma.group.findFirst({
+      where: {
+        groupId,
+        Chat: {
+          participants: {
+            some: {
+              userId: decodedPayload.userId,
+            },
+          },
+        },
+      },
+    });
+    if (!isUserExistInGroup) return;
+
+    const msg = await prisma.message.create({
+      data: {
+        chatId: isUserExistInGroup.chatId,
+        contentType: message.contentType,
+        contentForGroup: message.contentForGroup,
+        createdAt: new Date(),
+        senderId: decodedPayload.userId,
+      },
+      include: {
+        sender: {
+          select: {
+            userId: true,
+            username: true,
+          },
+        },
+      },
+    });
+
+    io.to(groupId).emit("sendMessageForGroup", msg);
   });
 };

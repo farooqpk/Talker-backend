@@ -42,16 +42,14 @@ model Message {
   messageId                        String      @id @default(auto()) @map("_id") @db.ObjectId
   chatId                           String      @db.ObjectId
   senderId                         String      @db.ObjectId
-  // for private chat starts
   contentForRecipient              String?
   contentForSender                 String?
   contentType                      ContentType
   encryptedSymetricKeyForRecipient String?
   encryptedSymetricKeyForSender    String?
-  // for private chat ends
   contentForGroup                  String?
   createdAt                        DateTime
-  // Relationships
+
   chat                             Chat        @relation(fields: [chatId], references: [chatId])
   sender                           User        @relation("SentMessages", fields: [senderId], references: [userId])
 }

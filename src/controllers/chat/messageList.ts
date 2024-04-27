@@ -12,6 +12,14 @@ export const messageList = async (req: Request, res: Response) => {
       orderBy: {
         createdAt: "asc",
       },
+      include: {
+        sender: {
+          select: {
+            userId:true,
+            username: true,
+          },
+        },
+      },
     });
 
     res.status(200).json(messages);
