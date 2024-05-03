@@ -68,6 +68,14 @@ export const socketHandler = (
           encryptedSymetricKeyForSender: message.encryptedSymetricKeyForSender,
           contentType: message.contentType,
         },
+        include: {
+          sender: {
+            select: {
+              userId: true,
+              username: true,
+            },
+          },
+        },
       });
 
       io.to(
@@ -106,6 +114,14 @@ export const socketHandler = (
             message.encryptedSymetricKeyForRecipient,
           encryptedSymetricKeyForSender: message.encryptedSymetricKeyForSender,
           contentType: message.contentType,
+        },
+        include: {
+          sender: {
+            select: {
+              userId: true,
+              username: true,
+            },
+          },
         },
       });
       io.to(
