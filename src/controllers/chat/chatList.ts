@@ -39,9 +39,9 @@ export const chatList = async (req: Request, res: Response) => {
         },
         Group: {
           select: {
-            groupId:true,
+            groupId: true,
             name: true,
-            description:true,
+            description: true,
             GroupKey: {
               where: {
                 userId: req.userId,

@@ -46,6 +46,7 @@ io.on("connection", async (socket: Socket) => {
     socket.broadcast.emit("isConnected", payload.userId);
     socketHandler(socket, io, payload);
     socket.on("disconnect", () => {
+      socket.rooms.forEach((room) => socket.leave(room));
       ONLINE_USERS_SOCKET.delete(payload.userId);
       socket.broadcast.emit("isDisconnected", payload.userId);
       console.log("Socket.IO: Disconnected");

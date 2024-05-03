@@ -13,6 +13,7 @@ import { createGroup } from "../controllers/group/createGroup";
 import { findPublicKeys } from "../controllers/group/findPublicKeys";
 import { groupDetails } from "../controllers/group/groupDetails";
 
+
 export const router: Router = Express.Router();
 
 router.post("/auth/signup", signup);
@@ -42,3 +43,4 @@ router.post("/create-group", verifyToken, createGroup);
 router.post("/get-public-keys", verifyToken, findPublicKeys);
 
 router.get("/group/:groupId", verifyToken, groupDetails);
+
