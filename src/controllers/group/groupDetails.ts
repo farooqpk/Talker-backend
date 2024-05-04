@@ -28,15 +28,14 @@ export const groupDetails = async (req: Request, res: Response) => {
                 },
               },
             },
-          },
-        },
-        GroupKey: {
-          where: {
-            userId: req.userId,
-            groupId,
-          },
-          select: {
-            encryptedGroupKey: true,
+            ChatKey: {
+              where: {
+                userId: req.userId,
+              },
+              select: {
+                encryptedKey: true,
+              },
+            },
           },
         },
       },

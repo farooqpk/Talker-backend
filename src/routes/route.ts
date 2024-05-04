@@ -10,9 +10,10 @@ import { findUser } from "../controllers/user/findUser";
 import { chatList } from "../controllers/chat/chatList";
 import { findUsersForCreateGroup } from "../controllers/group/findUsersForCreateGroup";
 import { createGroup } from "../controllers/group/createGroup";
-import { findPublicKeys } from "../controllers/group/findPublicKeys";
+import { findPublicKeys } from "../controllers/chat/findPublicKeys";
 import { groupDetails } from "../controllers/group/groupDetails";
-
+import { exitGroup } from "../controllers/group/exitGroup";
+import { getChatKey } from "../controllers/chat/getChatKey";
 
 export const router: Router = Express.Router();
 
@@ -44,3 +45,6 @@ router.post("/get-public-keys", verifyToken, findPublicKeys);
 
 router.get("/group/:groupId", verifyToken, groupDetails);
 
+router.delete("/exit-group/:groupId", verifyToken, exitGroup);
+
+router.get("/get-chat-key/:chatId", verifyToken, getChatKey);

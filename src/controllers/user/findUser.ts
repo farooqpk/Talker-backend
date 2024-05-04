@@ -11,7 +11,7 @@ export const findUser = async (req: Request, res: Response) => {
       select: {
         userId: true,
         username: true,
-        publicKey: true,
+        publicKey:true
       },
     });
 
@@ -21,7 +21,7 @@ export const findUser = async (req: Request, res: Response) => {
           every: {
             userId: {
               in: [userId, req.userId],
-            }
+            },
           },
         },
       },
@@ -36,7 +36,7 @@ export const findUser = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-    
+
     res.status(500).json({
       success: false,
       message: "there is an error while fetching user",

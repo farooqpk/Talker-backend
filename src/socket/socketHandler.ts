@@ -40,98 +40,98 @@ export const socketHandler = (
     }
   });
 
-  socket.on("sendMessage", async (data) => {
-    const { userId, message } = data;
-    const recipentSocketId = ONLINE_USERS_SOCKET.get(userId);
-    const users = [decodedPayload.userId, userId];
+  socket.on(
+    "sendMessage",
+    async ({ recipientId, message, encryptedChatKey }) => {
+      const recipentSocketId = ONLINE_USERS_SOCKET.get(recipientId);
+      const users = [decodedPayload.userId, recipientId];
 
-    const isAlreadyChatExist = await prisma.chat.findFirst({
-      where: {
-        participants: {
-          every: {
-            userId: { in: users },
-          },
-        },
-      },
-    });
-
-    if (isAlreadyChatExist) {
-      const msg = await prisma.message.create({
-        data: {
-          contentForRecipient: message.encryptedMessageForRecipient,
-          contentForSender: message.encryptedMessageForSender,
-          createdAt: new Date(),
-          chatId: isAlreadyChatExist.chatId,
-          senderId: decodedPayload.userId,
-          encryptedSymetricKeyForRecipient:
-            message.encryptedSymetricKeyForRecipient,
-          encryptedSymetricKeyForSender: message.encryptedSymetricKeyForSender,
-          contentType: message.contentType,
-        },
-        include: {
-          sender: {
-            select: {
-              userId: true,
-              username: true,
+      const isAlreadyChatExist = await prisma.chat.findFirst({
+        where: {
+          participants: {
+            every: {
+              userId: { in: users },
             },
           },
         },
       });
 
-      io.to(
-        recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
-      ).emit("sendMessage", {
-        isRefetchChatList: false,
-        message: msg,
-      });
-    } else {
-      const chat = await prisma.chat.create({
-        data: {
-          createdAt: new Date(),
-        },
-      });
-
-      await Promise.all(
-        users.map(async (userId: string) => {
-          await prisma.participants.create({
-            data: {
-              chatId: chat.chatId,
-              userId: userId,
-              createdAt: new Date(),
-            },
-          });
-        })
-      );
-
-      const msg = await prisma.message.create({
-        data: {
-          contentForRecipient: message.encryptedMessageForRecipient,
-          contentForSender: message.encryptedMessageForSender,
-          createdAt: new Date(),
-          chatId: chat.chatId,
-          senderId: decodedPayload.userId,
-          encryptedSymetricKeyForRecipient:
-            message.encryptedSymetricKeyForRecipient,
-          encryptedSymetricKeyForSender: message.encryptedSymetricKeyForSender,
-          contentType: message.contentType,
-        },
-        include: {
-          sender: {
-            select: {
-              userId: true,
-              username: true,
+      if (isAlreadyChatExist) {
+        const msg = await prisma.message.create({
+          data: {
+            content: message.content,
+            createdAt: new Date(),
+            chatId: isAlreadyChatExist.chatId,
+            senderId: decodedPayload.userId,
+            contentType: message.contentType,
+          },
+          include: {
+            sender: {
+              select: {
+                userId: true,
+                username: true,
+              },
             },
           },
-        },
-      });
-      io.to(
-        recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
-      ).emit("sendMessage", {
-        isRefetchChatList: true,
-        message: msg,
-      });
+        });
+
+        io.to(
+          recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
+        ).emit("sendMessage", {
+          isRefetchChatList: false,
+          message: msg,
+        });
+      } else {
+        const chat = await prisma.chat.create({
+          data: {
+            createdAt: new Date(),
+            ChatKey: {
+              createMany: {
+                data: encryptedChatKey.map(
+                  (item: { userId: string; encryptedKey: string }) => ({
+                    userId: item.userId,
+                    encryptedKey: item.encryptedKey,
+                  })
+                ),
+              },
+            },
+            participants: {
+              createMany: {
+                data: users.map((userId: string) => ({
+                  userId,
+                  createdAt: new Date(),
+                })),
+              },
+            },
+          },
+        });
+
+        const msg = await prisma.message.create({
+          data: {
+            content: message.content,
+            createdAt: new Date(),
+            chatId: chat.chatId,
+            senderId: decodedPayload.userId,
+            contentType: message.contentType,
+          },
+          include: {
+            sender: {
+              select: {
+                userId: true,
+                username: true,
+              },
+            },
+          },
+        });
+        io.to(
+          recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
+        ).emit("sendMessage", {
+          isRefetchChatList: true,
+          message: msg,
+        });
+      }
     }
-  });
+  );
 
   socket.on("joinGroup", async ({ groupIds }) => {
     console.log("joinGroup", groupIds);
@@ -179,7 +179,7 @@ export const socketHandler = (
       data: {
         chatId: isUserExistInGroup.chatId,
         contentType: message.contentType,
-        contentForGroup: message.contentForGroup,
+        content: message.content,
         createdAt: new Date(),
         senderId: decodedPayload.userId,
       },
