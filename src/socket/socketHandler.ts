@@ -193,6 +193,6 @@ export const socketHandler = (
       },
     });
 
-    io.to(groupId).emit("sendMessageForGroup", msg);
+    io.to(groupId).emit("sendMessageForGroup", { message: msg });
   });
 };
