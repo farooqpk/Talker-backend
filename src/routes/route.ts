@@ -14,6 +14,7 @@ import { findPublicKeys } from "../controllers/chat/findPublicKeys";
 import { groupDetails } from "../controllers/group/groupDetails";
 import { exitGroup } from "../controllers/group/exitGroup";
 import { getChatKey } from "../controllers/chat/getChatKey";
+import { updateUsername } from "../controllers/auth/updateUsername";
 
 export const router: Router = Express.Router();
 
@@ -48,3 +49,5 @@ router.get("/group/:groupId", verifyToken, groupDetails);
 router.delete("/exit-group/:groupId", verifyToken, exitGroup);
 
 router.get("/get-chat-key/:chatId", verifyToken, getChatKey);
+
+router.post("/auth/update-username", verifyToken, updateUsername);

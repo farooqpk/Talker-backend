@@ -41,7 +41,7 @@ export const socketHandler = (
   });
 
   socket.on(
-    "sendMessage",
+    "sendPrivateMessage",
     async ({ recipientId, message, encryptedChatKey }) => {
       const recipentSocketId = ONLINE_USERS_SOCKET.get(recipientId);
       const users = [decodedPayload.userId, recipientId];
@@ -77,7 +77,7 @@ export const socketHandler = (
 
         io.to(
           recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
-        ).emit("sendMessage", {
+        ).emit("sendPrivateMessage", {
           isRefetchChatList: false,
           message: msg,
         });
@@ -125,7 +125,7 @@ export const socketHandler = (
         });
         io.to(
           recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
-        ).emit("sendMessage", {
+        ).emit("sendPrivateMessage", {
           isRefetchChatList: true,
           message: msg,
         });
