@@ -46,6 +46,7 @@ model Message {
   content     String
   contentType ContentType
   createdAt   DateTime
+  isDeleted   Boolean     @default(false)
 
   chat   Chat @relation(fields: [chatId], references: [chatId])
   sender User @relation("SentMessages", fields: [senderId], references: [userId])

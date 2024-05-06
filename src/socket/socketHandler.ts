@@ -195,4 +195,46 @@ export const socketHandler = (
 
     io.to(groupId).emit("sendMessageForGroup", { message: msg });
   });
+
+  socket.on(
+    "deleteMessage",
+    async ({
+      messageId,
+      recipientId,
+      groupId,
+      isGroup,
+    }: {
+      messageId: string;
+      recipientId?: string;
+      groupId?: string;
+      isGroup?: boolean;
+    }) => {
+      if ((isGroup && !groupId) || (!isGroup && !recipientId)) return;
+
+      const msg = await prisma.message.findUnique({
+        where: {
+          messageId,
+        },
+      });
+
+      if (msg?.senderId !== decodedPayload.userId) return;
+      await prisma.message.update({
+        where: {
+          messageId,
+        },
+        data: {
+          isDeleted: true,
+        },
+      });
+
+      if (isGroup) {
+        io.to(groupId!).emit("deleteMessage", messageId);
+      } else {
+        const recipentSocketId = ONLINE_USERS_SOCKET.get(recipientId!);
+        io.to(
+          recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
+        ).emit("deleteMessage", messageId);
+      }
+    }
+  );
 };
