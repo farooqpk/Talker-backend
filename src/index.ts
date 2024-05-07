@@ -1,4 +1,4 @@
-import express, { Express, Request, Response, urlencoded } from "express";
+import express, { Express, urlencoded } from "express";
 import cors from "cors";
 import { router } from "./routes/route";
 import dotenv from "dotenv";
@@ -8,6 +8,7 @@ import { Server, Socket } from "socket.io";
 import { socketHandler } from "./socket/socketHandler";
 import { connectPrisma } from "./utils/prisma";
 import { verifyJwt } from "./utils/verifyJwt";
+import { EventEmitter } from "events";
 dotenv.config();
 
 const app: Express = express();
@@ -30,6 +31,8 @@ const io: Server = new Server(server, {
 });
 
 export const ONLINE_USERS_SOCKET: Map<string, string> = new Map();
+
+export const eventEmitter = new EventEmitter();
 
 io.on("connection", async (socket: Socket) => {
   const token = socket.handshake.auth?.token;

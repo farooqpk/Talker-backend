@@ -8,6 +8,13 @@ export const messageList = async (req: Request, res: Response) => {
     const messages = await prisma.message.findMany({
       where: {
         chatId: chatId,
+        chat: {
+          participants: {
+            some: {
+              userId: req.userId,
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: "asc",
@@ -15,7 +22,7 @@ export const messageList = async (req: Request, res: Response) => {
       include: {
         sender: {
           select: {
-            userId:true,
+            userId: true,
             username: true,
           },
         },

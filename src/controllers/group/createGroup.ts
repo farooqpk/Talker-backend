@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
 import { EncryptedChatKey } from "../../types/chat";
+import { eventEmitter } from "../..";
 
 interface CreateGroupType extends EncryptedChatKey {
   groupName: string;
@@ -41,6 +42,14 @@ export const createGroup = async (req: Request, res: Response) => {
         },
       },
     });
+
+    // emit event for members except admin
+    eventEmitter.emit(
+      "groupCreated",
+      encryptedChatKey
+        .map(({ userId }) => userId)
+        .filter((id) => id !== req.userId)
+    );
 
     res.status(200).json(chat);
   } catch (error) {

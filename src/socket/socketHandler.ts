@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { DecodedPayload } from "../types/DecodedPayload";
 import { prisma } from "../utils/prisma";
-import { ONLINE_USERS_SOCKET } from "..";
+import { ONLINE_USERS_SOCKET, eventEmitter } from "..";
 
 export const socketHandler = (
   socket: Socket,
@@ -237,4 +237,118 @@ export const socketHandler = (
       }
     }
   );
+
+  socket.on("exitGroup", async ({ groupId }) => {
+    const group = await prisma.group.findUnique({
+      where: {
+        groupId,
+        Chat: {
+          participants: {
+            some: {
+              userId: decodedPayload.userId,
+            },
+          },
+        },
+      },
+      include: {
+        Chat: {
+          include: {
+            participants: {
+              where: {
+                userId: decodedPayload.userId,
+              },
+              select: {
+                participantId: true,
+              },
+            },
+            ChatKey: {
+              where: {
+                userId: decodedPayload.userId,
+              },
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const isExitByAdmin = group?.adminId === decodedPayload.userId;
+
+    await prisma.$transaction(
+      async (transactionPrisma) => {
+        if (isExitByAdmin) {
+          // if admin then delete group
+          await Promise.all([
+            transactionPrisma.chatKey.deleteMany({
+              where: {
+                chatId: group?.chatId,
+              },
+            }),
+            transactionPrisma.group.delete({
+              where: {
+                groupId,
+              },
+            }),
+            transactionPrisma.participants.deleteMany({
+              where: {
+                chatId: group?.chatId,
+              },
+            }),
+            transactionPrisma.message.deleteMany({
+              where: {
+                chatId: group?.chatId,
+              },
+            }),
+            transactionPrisma.chat.delete({
+              where: {
+                chatId: group?.chatId,
+              },
+            }),
+          ]);
+        } else {
+          // if not admin exit the group
+          await transactionPrisma.chat.update({
+            where: {
+              chatId: group?.chatId,
+            },
+            data: {
+              participants: {
+                delete: {
+                  participantId: group?.Chat.participants[0].participantId,
+                },
+              },
+              ChatKey: {
+                delete: {
+                  id: group?.Chat.ChatKey[0].id,
+                },
+              },
+            },
+          });
+        }
+      },
+      {
+        maxWait: 10000,
+        timeout: 5000,
+      }
+    );
+
+    io.to(groupId).emit("exitGroup", {
+      groupId,
+      isExitByAdmin,
+      exitedUserId: decodedPayload.userId,
+    });
+  });
+
+  eventEmitter.on("groupCreated", (users) => {
+    let usersSocket: string[] = [];
+    for (let i = 0; i < users.length; i++) {
+      if (ONLINE_USERS_SOCKET.has(users[i])) {
+        usersSocket.push(ONLINE_USERS_SOCKET.get(users[i] as string)!);
+      }
+    }
+
+    io.to(usersSocket).emit("groupCreated");
+  });
 };
