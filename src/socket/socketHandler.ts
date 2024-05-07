@@ -127,14 +127,14 @@ export const socketHandler = (
           recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
         ).emit("sendPrivateMessage", {
           isRefetchChatList: true,
-          message: msg,
+          // send encrypted chat keys for the initial chat, because we cant get chat key immediatly from client side by chat key api call
+          message: { ...msg, encryptedChatKeys: encryptedChatKey },
         });
       }
     }
   );
 
   socket.on("joinGroup", async ({ groupIds }) => {
-    console.log("joinGroup", groupIds);
     const isUserExistInGroup = await prisma.group.findFirst({
       where: {
         groupId: {
@@ -152,11 +152,12 @@ export const socketHandler = (
 
     if (isUserExistInGroup) {
       socket.join(groupIds);
+      console.log("joinGroup", groupIds);
     }
   });
 
   socket.on("leaveGroup", ({ groupIds }) => {
-    socket.leave(groupIds);
+    groupIds?.forEach((id: string) => socket.leave(id));
     console.log("leaveGroup", groupIds);
   });
 
@@ -324,6 +325,11 @@ export const socketHandler = (
                   id: group?.Chat.ChatKey[0].id,
                 },
               },
+              messages: {
+                deleteMany: {
+                  senderId: decodedPayload.userId,
+                },
+              },
             },
           });
         }
@@ -348,7 +354,6 @@ export const socketHandler = (
         usersSocket.push(ONLINE_USERS_SOCKET.get(users[i] as string)!);
       }
     }
-
     io.to(usersSocket).emit("groupCreated");
   });
 };
