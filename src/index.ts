@@ -16,9 +16,8 @@ const server = http.createServer(app);
 
 app.use(
   (cors as (options: cors.CorsOptions) => express.RequestHandler)({
-    origin: true,
+    // origin: process.env.CLIENT_URL,
     credentials: true,
-    methods: "GET,POST,PUT,DELETE",
   })
 );
 app.use(express.json());
@@ -27,7 +26,10 @@ app.use("/", router);
 app.use(urlencoded({ extended: true }));
 
 const io: Server = new Server(server, {
-  cors: { origin: process.env.CLIENT_URL, credentials: true },
+  cors: {
+    // origin: process.env.CLIENT_URL,
+    credentials: true,
+  },
 });
 
 export const ONLINE_USERS_SOCKET: Map<string, string> = new Map();
