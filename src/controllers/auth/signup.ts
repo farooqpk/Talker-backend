@@ -36,10 +36,8 @@ export const signup = async (req: Request, res: Response) => {
       },
     });
 
-    const [acessToken, refreshToken] = await Promise.all([
-      createJwtToken(user.userId, user.username, "access"),
-      createJwtToken(user.userId, user.username, "refresh"),
-    ]);
+    const acessToken = createJwtToken(user.userId, user.username, "access");
+    const refreshToken = createJwtToken(user.userId, user.username, "refresh");
 
     return res.status(201).send({
       success: true,
@@ -49,9 +47,10 @@ export const signup = async (req: Request, res: Response) => {
       user,
     });
   } catch (error: any) {
+    console.log(error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred during login.",
+      message: error.message,
     });
   }
 };

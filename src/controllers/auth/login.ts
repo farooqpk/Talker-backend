@@ -33,18 +33,16 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    const [acessToken, refreshToken] = await Promise.all([
-      createJwtToken(
-        isUserNameAlreadyExist.userId,
-        isUserNameAlreadyExist.username,
-        "access"
-      ),
-      createJwtToken(
-        isUserNameAlreadyExist.userId,
-        isUserNameAlreadyExist.username,
-        "refresh"
-      ),
-    ]);
+    const acessToken = createJwtToken(
+      isUserNameAlreadyExist.userId,
+      isUserNameAlreadyExist.username,
+      "access"
+    );
+    const refreshToken = createJwtToken(
+      isUserNameAlreadyExist.userId,
+      isUserNameAlreadyExist.username,
+      "refresh"
+    );
 
     return res.status(200).send({
       success: true,
