@@ -55,6 +55,8 @@ export const login = async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
+    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "An error occurred during login.",

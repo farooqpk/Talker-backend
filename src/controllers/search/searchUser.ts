@@ -3,6 +3,8 @@ import { prisma } from "../../utils/prisma";
 
 export const searchUsers = async (req: Request, res: Response) => {
   try {
+    const searchValue = req.query?.search as string;
+
     const users = await prisma.user.findMany({
       where: {
         userId: {
@@ -10,6 +12,12 @@ export const searchUsers = async (req: Request, res: Response) => {
             equals: req.userId,
           },
         },
+        ...(searchValue && {
+          username: {
+            contains: searchValue,
+            mode: "insensitive",
+          },
+        }),
       },
       select: {
         userId: true,
