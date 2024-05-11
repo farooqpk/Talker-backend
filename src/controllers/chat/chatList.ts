@@ -1,8 +1,11 @@
 import { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
+import { getDataFromRedis,setDataInRedis } from "../../redis/index";
 
 export const chatList = async (req: Request, res: Response) => {
   try {
+    const cachedChats = await getDataFromRedis(`chats:${req.userId}`);
+    if (cachedChats) return res.status(200).json(cachedChats);
     const chats = await prisma.chat.findMany({
       where: {
         participants: {
@@ -53,6 +56,8 @@ export const chatList = async (req: Request, res: Response) => {
         },
       },
     });
+
+    await setDataInRedis(`chats:${req.userId}`, chats, 4 * 60 * 60);
 
     res.status(200).json(chats);
   } catch (error) {

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
 import { EncryptedChatKey } from "../../types/chat";
 import { eventEmitter } from "../..";
+import { clearCacheFromRedis } from "../../redis/index";
 
 interface CreateGroupType extends EncryptedChatKey {
   groupName: string;
@@ -11,6 +12,8 @@ export const createGroup = async (req: Request, res: Response) => {
   try {
     const { groupName, description, encryptedChatKey }: CreateGroupType =
       req.body;
+
+    const members = encryptedChatKey.map((item) => item.userId);
 
     const chat = await prisma.chat.create({
       data: {
@@ -26,7 +29,7 @@ export const createGroup = async (req: Request, res: Response) => {
         },
         participants: {
           createMany: {
-            data: encryptedChatKey.map(({ userId }) => ({
+            data: members.map((userId) => ({
               userId,
               createdAt: new Date(),
             })),
@@ -46,10 +49,13 @@ export const createGroup = async (req: Request, res: Response) => {
     // emit event for members except admin
     eventEmitter.emit(
       "groupCreated",
-      encryptedChatKey
-        .map(({ userId }) => userId)
-        .filter((id) => id !== req.userId)
+      members.map((userId) => userId).filter((id) => id !== req.userId)
     );
+
+    // clear all the members chat cache
+    await clearCacheFromRedis({
+      key: members.map((userId) => `chats:${userId}`),
+    });
 
     res.status(200).json(chat);
   } catch (error) {

@@ -1,9 +1,16 @@
 import { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
+import { setDataInRedis, getDataFromRedis } from "../../redis/index";
 
 export const getChatKey = async (req: Request, res: Response) => {
   try {
     const chatId = req.params.chatId;
+
+    const cachedChatKey = await getDataFromRedis(
+      `chatKey:${req.userId}:${chatId}`
+    );
+    if (cachedChatKey) return res.status(200).json(cachedChatKey);
+
     const groupKey = await prisma.chatKey.findFirst({
       where: {
         chatId,
@@ -13,6 +20,13 @@ export const getChatKey = async (req: Request, res: Response) => {
         encryptedKey: true,
       },
     });
+
+    await setDataInRedis(
+      `chatKey:${req.userId}:${chatId}`,
+      groupKey,
+      8 * 60 * 60,
+    );
+
     res.status(200).json(groupKey);
   } catch (error) {
     res.status(500).json(error);

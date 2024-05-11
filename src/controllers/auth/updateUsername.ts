@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
+import { clearCacheFromRedis } from "../../redis";
 
 export const updateUsername = async (req: Request, res: Response) => {
   try {
@@ -27,6 +28,11 @@ export const updateUsername = async (req: Request, res: Response) => {
         username,
       },
     });
+
+    await Promise.all([
+      clearCacheFromRedis({ pattern: `userid_not:*` }),
+      clearCacheFromRedis({ key: `user:${user.userId}` }),
+    ]);
     return res.status(200).json(user);
   } catch (error) {
     return res.status(500).json(error);

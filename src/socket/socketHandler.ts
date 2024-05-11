@@ -2,6 +2,7 @@ import { Server, Socket } from "socket.io";
 import { DecodedPayload } from "../types/DecodedPayload";
 import { prisma } from "../utils/prisma";
 import { ONLINE_USERS_SOCKET, eventEmitter } from "..";
+import { clearCacheFromRedis } from "../redis";
 
 export const socketHandler = (
   socket: Socket,
@@ -75,6 +76,11 @@ export const socketHandler = (
           },
         });
 
+        // clear the message cache
+        await clearCacheFromRedis({
+          key: `messages:${isAlreadyChatExist.chatId}`,
+        });
+
         io.to(
           recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
         ).emit("sendPrivateMessage", {
@@ -123,6 +129,12 @@ export const socketHandler = (
             },
           },
         });
+
+        // clear all the members chat cache
+        await clearCacheFromRedis({
+          key: [`chats:${decodedPayload.userId}`, `chats:${recipientId}`],
+        });
+
         io.to(
           recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
         ).emit("sendPrivateMessage", {
@@ -194,6 +206,9 @@ export const socketHandler = (
       },
     });
 
+    // clear the message cache
+    await clearCacheFromRedis({ key: `messages:${isUserExistInGroup.chatId}` });
+
     io.to(groupId).emit("sendMessageForGroup", { message: msg });
   });
 
@@ -228,6 +243,11 @@ export const socketHandler = (
         },
       });
 
+      // clear the message cache
+      await clearCacheFromRedis({
+        key: `messages:${msg.chatId}`,
+      });
+
       if (isGroup) {
         io.to(groupId!).emit("deleteMessage", messageId);
       } else {
@@ -255,11 +275,9 @@ export const socketHandler = (
         Chat: {
           include: {
             participants: {
-              where: {
-                userId: decodedPayload.userId,
-              },
               select: {
                 participantId: true,
+                userId: true,
               },
             },
             ChatKey: {
@@ -275,6 +293,7 @@ export const socketHandler = (
       },
     });
 
+    const groupMembers = group?.Chat.participants;
     const isExitByAdmin = group?.adminId === decodedPayload.userId;
 
     await prisma.$transaction(
@@ -317,7 +336,9 @@ export const socketHandler = (
             data: {
               participants: {
                 delete: {
-                  participantId: group?.Chat.participants[0].participantId,
+                  participantId: groupMembers?.find(
+                    (item) => item.userId === decodedPayload.userId
+                  )?.participantId,
                 },
               },
               ChatKey: {
@@ -338,6 +359,28 @@ export const socketHandler = (
         maxWait: 10000,
         timeout: 5000,
       }
+    );
+
+    // clear the caches
+    await Promise.all(
+      isExitByAdmin
+        ? [
+            clearCacheFromRedis({
+              key: groupMembers?.map((item) => `chats:${item.userId}`),
+            }),
+            clearCacheFromRedis({
+              key: [`messages:${group?.chatId}`, `group:${groupId}`],
+            }),
+          ]
+        : [
+            clearCacheFromRedis({
+              key: [
+                `chats:${decodedPayload.userId}`,
+                `messages:${group?.chatId}`,
+                `group:${groupId}`,
+              ],
+            }),
+          ]
     );
 
     io.to(groupId).emit("exitGroup", {

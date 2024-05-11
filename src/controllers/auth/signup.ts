@@ -2,6 +2,7 @@ import { CookieOptions, Request, Response } from "express";
 import { createJwtToken } from "../../utils/createJwtToken";
 import { prisma } from "../../utils/prisma";
 import * as bcrypt from "bcrypt";
+import { clearCacheFromRedis } from "../../redis";
 
 export const signup = async (req: Request, res: Response) => {
   try {
@@ -39,6 +40,8 @@ export const signup = async (req: Request, res: Response) => {
     const acessToken = createJwtToken(user.userId, user.username, "access");
     const refreshToken = createJwtToken(user.userId, user.username, "refresh");
 
+    await clearCacheFromRedis({ pattern: `userid_not:*` });
+
     return res.status(201).send({
       success: true,
       message: "User created successfully",
@@ -50,7 +53,7 @@ export const signup = async (req: Request, res: Response) => {
     console.log(error);
     return res.status(500).json({
       success: false,
-      message:"Something went wrong",
+      message: "Something went wrong",
     });
   }
 };

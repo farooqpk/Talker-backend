@@ -9,6 +9,7 @@ import { socketHandler } from "./socket/socketHandler";
 import { connectPrisma } from "./utils/prisma";
 import { verifyJwt } from "./utils/verifyJwt";
 import { EventEmitter } from "events";
+import { connectToRedis } from "./utils/redis";
 dotenv.config();
 
 const app: Express = express();
@@ -64,5 +65,5 @@ io.on("connection", async (socket: Socket) => {
 
 server.listen(process.env.PORT!, async () => {
   console.log("server connected");
-  await connectPrisma();
+  await Promise.all([connectPrisma(), connectToRedis()]);
 });
