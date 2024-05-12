@@ -6,8 +6,10 @@ export const searchUsers = async (req: Request, res: Response) => {
   try {
     const searchValue = req.query?.search as string;
 
-    const cachedUsers = await getDataFromRedis(`userid_not:${req.userId}`);
-    if (cachedUsers) return res.status(200).json(cachedUsers);
+    if (!searchValue) {
+      const cachedUsers = await getDataFromRedis(`userid_not:${req.userId}`);
+      if (cachedUsers) return res.status(200).json(cachedUsers);
+    }
 
     const users = await prisma.user.findMany({
       where: {
@@ -29,13 +31,19 @@ export const searchUsers = async (req: Request, res: Response) => {
       },
     });
 
-    await setDataInRedis(`userid_not:${req.userId}`, users, 4 * 60 * 60);
+    const modifiedUsers = users.map((item) => {
+      return { label: item.username, value: item.userId };
+    });
 
-    res.status(200).json(
-      users.map((item) => {
-        return { label: item.username, value: item.userId };
-      })
-    );
+    if (!searchValue) {
+      await setDataInRedis(
+        `userid_not:${req.userId}`,
+        modifiedUsers,
+        4 * 60 * 60
+      );
+    }
+
+    res.status(200).json(modifiedUsers);
   } catch (error) {
     res.status(500).json({
       success: false,

@@ -1,6 +1,5 @@
 import express, { Express, urlencoded } from "express";
 import cors from "cors";
-import { router } from "./routes/route";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import http from "http";
@@ -10,6 +9,11 @@ import { connectPrisma } from "./utils/prisma";
 import { verifyJwt } from "./utils/verifyJwt";
 import { EventEmitter } from "events";
 import { connectToRedis } from "./utils/redis";
+import { authRouter } from "./routes/auth";
+import { userRouter } from "./routes/user";
+import { chatRouter } from "./routes/chat";
+import { messageRouter } from "./routes/message";
+import { groupRouter } from "./routes/group";
 dotenv.config();
 
 const app: Express = express();
@@ -23,8 +27,14 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
-app.use("/", router);
 app.use(urlencoded({ extended: true }));
+
+// Routes
+app.use("/api/auth", authRouter);
+app.use("/api/user", userRouter);
+app.use("/api/chat", chatRouter);
+app.use("/api/message", messageRouter);
+app.use("/api/group", groupRouter);
 
 const io: Server = new Server(server, {
   cors: {

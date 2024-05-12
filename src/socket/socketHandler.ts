@@ -2,7 +2,11 @@ import { Server, Socket } from "socket.io";
 import { DecodedPayload } from "../types/DecodedPayload";
 import { prisma } from "../utils/prisma";
 import { ONLINE_USERS_SOCKET, eventEmitter } from "..";
-import { clearCacheFromRedis } from "../redis";
+import {
+  clearCacheFromRedis,
+  getDataFromRedis,
+  setDataInRedis,
+} from "../redis";
 
 export const socketHandler = (
   socket: Socket,
@@ -47,15 +51,21 @@ export const socketHandler = (
       const recipentSocketId = ONLINE_USERS_SOCKET.get(recipientId);
       const users = [decodedPayload.userId, recipientId];
 
-      const isAlreadyChatExist = await prisma.chat.findFirst({
-        where: {
-          participants: {
-            every: {
-              userId: { in: users },
+      const isAlreadyChatExistCached = await getDataFromRedis(
+        `isAlreadyChatExist:${users}`
+      );
+
+      const isAlreadyChatExist =
+        isAlreadyChatExistCached ||
+        (await prisma.chat.findFirst({
+          where: {
+            participants: {
+              every: {
+                userId: { in: users },
+              },
             },
           },
-        },
-      });
+        }));
 
       if (isAlreadyChatExist) {
         const msg = await prisma.message.create({
@@ -76,9 +86,22 @@ export const socketHandler = (
           },
         });
 
-        // clear the message cache
+        // cache isAlreadyChatExist
+        if (!isAlreadyChatExistCached) {
+          await setDataInRedis(
+            `isAlreadyChatExist:${users}`,
+            isAlreadyChatExist,
+            4 * 60 * 60
+          );
+        }
+
+        // clear both chat and message cache
         await clearCacheFromRedis({
-          key: `messages:${isAlreadyChatExist.chatId}`,
+          key: [
+            `messages:${isAlreadyChatExist.chatId}`,
+            `chats:${decodedPayload.userId}`,
+            `chats:${recipientId}`,
+          ],
         });
 
         io.to(
@@ -185,6 +208,18 @@ export const socketHandler = (
           },
         },
       },
+      select: {
+        chatId: true,
+        Chat: {
+          select: {
+            participants: {
+              select: {
+                userId: true,
+              },
+            },
+          },
+        },
+      },
     });
     if (!isUserExistInGroup) return;
 
@@ -207,7 +242,16 @@ export const socketHandler = (
     });
 
     // clear the message cache
-    await clearCacheFromRedis({ key: `messages:${isUserExistInGroup.chatId}` });
+    const groupMembersClearChatsKey = isUserExistInGroup.Chat.participants.map(
+      (item) => `chats:${item.userId}`
+    );
+
+    await Promise.all([
+      clearCacheFromRedis({
+        key: `messages:${isUserExistInGroup.chatId}`,
+      }),
+      clearCacheFromRedis({ key: groupMembersClearChatsKey }),
+    ]);
 
     io.to(groupId).emit("sendMessageForGroup", { message: msg });
   });
@@ -295,6 +339,7 @@ export const socketHandler = (
 
     const groupMembers = group?.Chat.participants;
     const isExitByAdmin = group?.adminId === decodedPayload.userId;
+    const chatId = group?.chatId;
 
     await prisma.$transaction(
       async (transactionPrisma) => {
@@ -303,7 +348,7 @@ export const socketHandler = (
           await Promise.all([
             transactionPrisma.chatKey.deleteMany({
               where: {
-                chatId: group?.chatId,
+                chatId,
               },
             }),
             transactionPrisma.group.delete({
@@ -313,17 +358,17 @@ export const socketHandler = (
             }),
             transactionPrisma.participants.deleteMany({
               where: {
-                chatId: group?.chatId,
+                chatId,
               },
             }),
             transactionPrisma.message.deleteMany({
               where: {
-                chatId: group?.chatId,
+                chatId,
               },
             }),
             transactionPrisma.chat.delete({
               where: {
-                chatId: group?.chatId,
+                chatId,
               },
             }),
           ]);
@@ -331,7 +376,7 @@ export const socketHandler = (
           // if not admin exit the group
           await transactionPrisma.chat.update({
             where: {
-              chatId: group?.chatId,
+              chatId,
             },
             data: {
               participants: {
@@ -369,6 +414,11 @@ export const socketHandler = (
               key: groupMembers?.map((item) => `chats:${item.userId}`),
             }),
             clearCacheFromRedis({
+              key: groupMembers?.map(
+                (item) => `chatKey:${item.userId}:${chatId}`
+              ),
+            }),
+            clearCacheFromRedis({
               key: [`messages:${group?.chatId}`, `group:${groupId}`],
             }),
           ]
@@ -378,6 +428,7 @@ export const socketHandler = (
                 `chats:${decodedPayload.userId}`,
                 `messages:${group?.chatId}`,
                 `group:${groupId}`,
+                `chatKey:${decodedPayload.userId}:${chatId}`,
               ],
             }),
           ]
