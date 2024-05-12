@@ -46,16 +46,16 @@ export const createGroup = async (req: Request, res: Response) => {
       },
     });
 
+    // clear all the members chat cache
+    await clearCacheFromRedis({
+      key: members.map((userId) => `chats:${userId}`),
+    });
+   
     // emit event for members except admin
     eventEmitter.emit(
       "groupCreated",
       members.map((userId) => userId).filter((id) => id !== req.userId)
     );
-
-    // clear all the members chat cache
-    await clearCacheFromRedis({
-      key: members.map((userId) => `chats:${userId}`),
-    });
 
     res.status(200).json(chat);
   } catch (error) {

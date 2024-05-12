@@ -155,7 +155,12 @@ export const socketHandler = (
 
         // clear all the members chat cache
         await clearCacheFromRedis({
-          key: [`chats:${decodedPayload.userId}`, `chats:${recipientId}`],
+          key: [
+            `chats:${decodedPayload.userId}`,
+            `chats:${recipientId}`,
+            `user:${decodedPayload.userId}`,
+            `user:${recipientId}`,
+          ],
         });
 
         io.to(
@@ -192,8 +197,10 @@ export const socketHandler = (
   });
 
   socket.on("leaveGroup", ({ groupIds }) => {
-    groupIds?.forEach((id: string) => socket.leave(id));
-    console.log("leaveGroup", groupIds);
+    groupIds?.forEach((id: string) => {
+      socket.leave(id);
+      console.log("leaveGroup", id);
+    });
   });
 
   socket.on("sendMessageForGroup", async ({ groupId, message }) => {
@@ -275,9 +282,24 @@ export const socketHandler = (
         where: {
           messageId,
         },
+        select: {
+          messageId: true,
+          senderId: true,
+          chatId: true,
+          chat: {
+            select: {
+              participants: {
+                select: {
+                  userId: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       if (msg?.senderId !== decodedPayload.userId) return;
+
       await prisma.message.update({
         where: {
           messageId,
@@ -288,9 +310,15 @@ export const socketHandler = (
       });
 
       // clear the message cache
-      await clearCacheFromRedis({
-        key: `messages:${msg.chatId}`,
-      });
+      const membersClearChatsKey = msg?.chat?.participants?.map(
+        (item) => `chats:${item.userId}`
+      );
+      await Promise.all([
+        clearCacheFromRedis({
+          key: `messages:${msg.chatId}`,
+        }),
+        clearCacheFromRedis({ key: membersClearChatsKey }),
+      ]);
 
       if (isGroup) {
         io.to(groupId!).emit("deleteMessage", messageId);
@@ -419,7 +447,12 @@ export const socketHandler = (
               ),
             }),
             clearCacheFromRedis({
-              key: [`messages:${group?.chatId}`, `group:${groupId}`],
+              key: `messages:${group?.chatId}`,
+            }),
+            clearCacheFromRedis({
+              key: groupMembers?.map(
+                (item) => `group:${groupId}:${item.userId}`
+              ),
             }),
           ]
         : [
@@ -427,7 +460,7 @@ export const socketHandler = (
               key: [
                 `chats:${decodedPayload.userId}`,
                 `messages:${group?.chatId}`,
-                `group:${groupId}`,
+                `group:${groupId}:${decodedPayload.userId}`,
                 `chatKey:${decodedPayload.userId}:${chatId}`,
               ],
             }),

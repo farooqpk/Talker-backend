@@ -6,7 +6,9 @@ export const groupDetails = async (req: Request, res: Response) => {
   try {
     const groupId = req.params.groupId;
 
-    const catchedGroupDetails = await getDataFromRedis(`group:${groupId}`);
+    const catchedGroupDetails = await getDataFromRedis(
+      `group:${groupId}:${req.userId}`
+    );
     if (catchedGroupDetails) return res.status(200).json(catchedGroupDetails);
 
     const group = await prisma.group.findUnique({
@@ -46,7 +48,7 @@ export const groupDetails = async (req: Request, res: Response) => {
       },
     });
 
-    await setDataInRedis(`group:${groupId}`, group, 12 * 60 * 60);
+    await setDataInRedis(`group:${groupId}:${req.userId}`, group, 12 * 60 * 60);
 
     return res.json(group);
   } catch (error) {

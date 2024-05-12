@@ -11,7 +11,7 @@ export const getChatKey = async (req: Request, res: Response) => {
     );
     if (cachedChatKey) return res.status(200).json(cachedChatKey);
 
-    const groupKey = await prisma.chatKey.findFirst({
+    const chatKey = await prisma.chatKey.findFirst({
       where: {
         chatId,
         userId: req.userId,
@@ -23,11 +23,11 @@ export const getChatKey = async (req: Request, res: Response) => {
 
     await setDataInRedis(
       `chatKey:${req.userId}:${chatId}`,
-      groupKey,
+      chatKey,
       8 * 60 * 60,
     );
 
-    res.status(200).json(groupKey);
+    res.status(200).json(chatKey);
   } catch (error) {
     res.status(500).json(error);
   }
