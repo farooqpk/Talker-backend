@@ -483,4 +483,58 @@ export const socketHandler = (
     }
     io.to(usersSocket).emit("groupCreated");
   });
+
+  socket.on(
+    "updateGroupDetails",
+    async ({
+      groupId,
+      name,
+      description,
+    }: {
+      groupId: string;
+      name?: string;
+      description?: string;
+    }) => {
+      const group = await prisma.group.update({
+        where: {
+          groupId,
+          adminId: decodedPayload.userId,
+        },
+        data: {
+          name,
+          description,
+        },
+        select: {
+          groupId: true,
+          name: true,
+          description: true,
+          Chat: {
+            select: {
+              participants: {
+                select: {
+                  userId: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const groupMembers = group?.Chat.participants;
+
+      // clear the caches
+      await clearCacheFromRedis({
+        key: groupMembers?.map((item) => `chats:${item.userId}`),
+      });
+      await clearCacheFromRedis({
+        key: groupMembers?.map((item) => `group:${groupId}:${item.userId}`),
+      });
+
+      io.to(groupId).emit("updateGroupDetails", {
+        groupId,
+        name: group.name,
+        description: group.description,
+      });
+    }
+  );
 };
