@@ -15,14 +15,14 @@ export function configureExpress(app: express.Express) {
   app.use(cookieParser());
   app.use(express.urlencoded({ extended: true }));
   app.use(helmet());
-  app.use(
-    rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 150,
-      standardHeaders: true,
-      legacyHeaders: false,
-    })
-  );
+  // app.use(
+  //   rateLimit({
+  //     windowMs: 15 * 60 * 1000, // 15 minutes
+  //     max: 150,
+  //     standardHeaders: true,
+  //     legacyHeaders: false,
+  //   })
+  // );
 
   // Routes
   app.use("/api/auth", authRouter);
