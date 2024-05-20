@@ -1,12 +1,16 @@
 import { Server, Socket } from "socket.io";
 import { DecodedPayload } from "../types/DecodedPayload";
 import { prisma } from "../utils/prisma";
-import { ONLINE_USERS_SOCKET, eventEmitter } from "..";
+import { ONLINE_USERS_SOCKET, eventEmitter } from "../server";
 import {
   clearCacheFromRedis,
   getDataFromRedis,
   setDataInRedis,
 } from "../redis";
+import { s3Client } from "../utils/r2";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { R2_BUCKET_NAME } from "../config";
+import { v4 as uuidv4 } from "uuid";
 
 export const socketHandler = (
   socket: Socket,
@@ -50,6 +54,9 @@ export const socketHandler = (
     async ({ recipientId, message, encryptedChatKey }) => {
       const recipentSocketId = ONLINE_USERS_SOCKET.get(recipientId);
       const users = [decodedPayload.userId, recipientId];
+      const { content, contentType } = message;
+      const IS_IMAGE_OR_AUDIO =
+        contentType === "IMAGE" || contentType === "AUDIO";
 
       const isAlreadyChatExistCached = await getDataFromRedis(
         `isAlreadyChatExist:${users}`
@@ -68,9 +75,22 @@ export const socketHandler = (
         }));
 
       if (isAlreadyChatExist) {
+        const uniqueKey = `${isAlreadyChatExist.chatId}/${uuidv4()}.json`;
+
+        if (IS_IMAGE_OR_AUDIO) {
+          const putObjectCommand = new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: uniqueKey,
+            Body: JSON.stringify(content),
+            ContentType: "application/json",
+          });
+          await s3Client.send(putObjectCommand);
+          console.log("uploaded successfully");
+        }
+
         const msg = await prisma.message.create({
           data: {
-            content: message.content,
+            content: IS_IMAGE_OR_AUDIO ? uniqueKey : content,
             createdAt: new Date(),
             chatId: isAlreadyChatExist.chatId,
             senderId: decodedPayload.userId,
@@ -99,8 +119,8 @@ export const socketHandler = (
         await clearCacheFromRedis({
           key: [
             `messages:${isAlreadyChatExist.chatId}`,
-            `chats:${decodedPayload.userId}`,
-            `chats:${recipientId}`,
+            `chats:${decodedPayload.userId}:*`,
+            `chats:${recipientId}:*`,
           ],
         });
 
@@ -135,9 +155,22 @@ export const socketHandler = (
           },
         });
 
+        const uniqueKey = `${chat.chatId}/${uuidv4()}.json`;
+
+        if (IS_IMAGE_OR_AUDIO) {
+          const putObjectCommand = new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: uniqueKey,
+            Body: JSON.stringify(content),
+            ContentType: "application/json",
+          });
+          await s3Client.send(putObjectCommand);
+          console.log("uploaded successfully");
+        }
+
         const msg = await prisma.message.create({
           data: {
-            content: message.content,
+            content: IS_IMAGE_OR_AUDIO ? uniqueKey : content,
             createdAt: new Date(),
             chatId: chat.chatId,
             senderId: decodedPayload.userId,
@@ -156,8 +189,8 @@ export const socketHandler = (
         // clear all the members chat cache
         await clearCacheFromRedis({
           key: [
-            `chats:${decodedPayload.userId}`,
-            `chats:${recipientId}`,
+            `chats:${decodedPayload.userId}:*`,
+            `chats:${recipientId}:*`,
             `user:${decodedPayload.userId}`,
             `user:${recipientId}`,
           ],
@@ -204,6 +237,8 @@ export const socketHandler = (
   });
 
   socket.on("sendMessageForGroup", async ({ groupId, message }) => {
+    const { content, contentType } = message;
+
     const isUserExistInGroup = await prisma.group.findFirst({
       where: {
         groupId,
@@ -233,8 +268,8 @@ export const socketHandler = (
     const msg = await prisma.message.create({
       data: {
         chatId: isUserExistInGroup.chatId,
-        contentType: message.contentType,
-        content: message.content,
+        contentType,
+        content,
         createdAt: new Date(),
         senderId: decodedPayload.userId,
       },
@@ -250,7 +285,7 @@ export const socketHandler = (
 
     // clear the message cache
     const groupMembersClearChatsKey = isUserExistInGroup.Chat.participants.map(
-      (item) => `chats:${item.userId}`
+      (item) => `chats:${item.userId}:*`
     );
 
     await Promise.all([
@@ -311,7 +346,7 @@ export const socketHandler = (
 
       // clear the message cache
       const membersClearChatsKey = msg?.chat?.participants?.map(
-        (item) => `chats:${item.userId}`
+        (item) => `chats:${item.userId}:*`
       );
       await Promise.all([
         clearCacheFromRedis({
@@ -439,7 +474,7 @@ export const socketHandler = (
       isExitByAdmin
         ? [
             clearCacheFromRedis({
-              key: groupMembers?.map((item) => `chats:${item.userId}`),
+              key: groupMembers?.map((item) => `chats:${item.userId}:*`),
             }),
             clearCacheFromRedis({
               key: groupMembers?.map(
@@ -458,7 +493,7 @@ export const socketHandler = (
         : [
             clearCacheFromRedis({
               key: [
-                `chats:${decodedPayload.userId}`,
+                `chats:${decodedPayload.userId}:*`,
                 `messages:${group?.chatId}`,
                 `group:${groupId}:${decodedPayload.userId}`,
                 `chatKey:${decodedPayload.userId}:${chatId}`,
@@ -524,7 +559,7 @@ export const socketHandler = (
 
       // clear the caches
       await clearCacheFromRedis({
-        key: groupMembers?.map((item) => `chats:${item.userId}`),
+        key: groupMembers?.map((item) => `chats:${item.userId}:*`),
       });
       await clearCacheFromRedis({
         key: groupMembers?.map((item) => `group:${groupId}:${item.userId}`),

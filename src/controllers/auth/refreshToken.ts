@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { createJwtToken } from "../../utils/createJwtToken";
+import { REFRESH_TOKEN_SECRET } from "../../config";
 
 export const createAccessTokenFromRefreshToken = async (
   req: Request,
@@ -18,7 +19,7 @@ export const createAccessTokenFromRefreshToken = async (
 
     const decodedData = jwt.verify(
       refreshToken,
-      process.env.REFRESH_TOKEN_SECRET!
+      REFRESH_TOKEN_SECRET!
     ) as any;
 
     const newAccessToken = createJwtToken(

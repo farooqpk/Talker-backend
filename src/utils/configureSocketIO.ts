@@ -1,7 +1,7 @@
 import { verifyJwt } from "./verifyJwt";
 import { Server } from "socket.io";
 import { socketHandler } from "../socket/socketHandler";
-import { ONLINE_USERS_SOCKET } from "..";
+import { ONLINE_USERS_SOCKET } from "../server";
 
 export function configureSocketIO(io: Server) {
   

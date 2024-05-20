@@ -1,11 +1,16 @@
 import { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
-import { getDataFromRedis,setDataInRedis } from "../../redis/index";
+import { getDataFromRedis, setDataInRedis } from "../../redis/index";
 
 export const chatList = async (req: Request, res: Response) => {
   try {
-    const cachedChats = await getDataFromRedis(`chats:${req.userId}`);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const cachedChats = await getDataFromRedis(`chats:${req.userId}:${page}`);
     if (cachedChats) return res.status(200).json(cachedChats);
+
     const chats = await prisma.chat.findMany({
       where: {
         participants: {
@@ -19,6 +24,8 @@ export const chatList = async (req: Request, res: Response) => {
       orderBy: {
         createdAt: "desc",
       },
+      skip: skip,
+      take: limit,
       include: {
         messages: {
           orderBy: {
@@ -57,9 +64,9 @@ export const chatList = async (req: Request, res: Response) => {
       },
     });
 
-    await setDataInRedis(`chats:${req.userId}`, chats, 4 * 60 * 60);
-
+    await setDataInRedis(`chats:${req.userId}:${page}`, chats, 4 * 60 * 60);
     res.status(200).json(chats);
+    
   } catch (error) {
     res.status(500).json({
       success: false,

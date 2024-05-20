@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import jwt from "jsonwebtoken";
+import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from "../config";
 
 export const createJwtToken = (
   userId: Prisma.UserCreateInput["userId"],
@@ -9,8 +10,8 @@ export const createJwtToken = (
   return jwt.sign(
     { userId, username },
     tokenType === "access"
-      ? process.env.ACCESS_TOKEN_SECRET!
-      : process.env.REFRESH_TOKEN_SECRET!,
+      ? ACCESS_TOKEN_SECRET!
+      : REFRESH_TOKEN_SECRET!,
     {
       expiresIn: tokenType === "access" ? "1h" : "7d",
     }

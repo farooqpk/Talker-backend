@@ -1,10 +1,11 @@
 import Redis from "ioredis";
+import { REDIS_URL } from "../config";
 
 let redisClient: Redis;
 
 const connectToRedis = async () => {
   try {
-    redisClient = new Redis(process.env.REDIS_URL!);
+    redisClient = new Redis(REDIS_URL!);
     console.log("Redis connected");
   } catch (error) {
     console.error("Redis connection error:", error);

@@ -1,11 +1,12 @@
 import jwt from "jsonwebtoken";
 import { DecodedPayload } from "../types/DecodedPayload";
+import { ACCESS_TOKEN_SECRET } from "../config";
 
 export const verifyJwt = async (value: string) => {
   try {
     const decodedData = jwt.verify(
       value,
-      process.env.ACCESS_TOKEN_SECRET!
+      ACCESS_TOKEN_SECRET!
     ) as DecodedPayload;
 
     if (decodedData) {

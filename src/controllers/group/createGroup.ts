@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
 import { EncryptedChatKey } from "../../types/chat";
-import { eventEmitter } from "../..";
+import { eventEmitter } from "../../server";
 import { clearCacheFromRedis } from "../../redis/index";
 
 interface CreateGroupType extends EncryptedChatKey {
@@ -48,7 +48,7 @@ export const createGroup = async (req: Request, res: Response) => {
 
     // clear all the members chat cache
     await clearCacheFromRedis({
-      key: members.map((userId) => `chats:${userId}`),
+      key: members.map((userId) => `chats:${userId}:*`),
     });
 
     // emit event for members except admin

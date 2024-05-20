@@ -1,6 +1,7 @@
 import { NextFunction, Response, Request } from "express";
 import jwt from "jsonwebtoken";
 import { DecodedPayload } from "../types/DecodedPayload";
+import { ACCESS_TOKEN_SECRET } from "../config";
 
 export const verifyToken = async (
   req: Request,
@@ -17,7 +18,7 @@ export const verifyToken = async (
   try {
     const tokenDecoded = jwt.verify(
       token,
-      process.env.ACCESS_TOKEN_SECRET!
+      ACCESS_TOKEN_SECRET!
     ) as DecodedPayload;
     if (tokenDecoded) {
       req.userId = tokenDecoded.userId;
