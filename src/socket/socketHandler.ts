@@ -118,9 +118,9 @@ export const socketHandler = (
         // clear both chat and message cache
         await clearCacheFromRedis({
           key: [
+            `chats:${decodedPayload.userId}`,
+            `chats:${recipientId}`,
             `messages:${isAlreadyChatExist.chatId}`,
-            `chats:${decodedPayload.userId}:*`,
-            `chats:${recipientId}:*`,
           ],
         });
 
@@ -189,9 +189,8 @@ export const socketHandler = (
         // clear all the members chat cache
         await clearCacheFromRedis({
           key: [
-            `chats:${decodedPayload.userId}:*`,
-            `chats:${recipientId}:*`,
-            `user:${decodedPayload.userId}`,
+            `chats:${decodedPayload.userId}`,
+            `chats:${recipientId}`,
             `user:${recipientId}`,
           ],
         });
@@ -284,15 +283,14 @@ export const socketHandler = (
     });
 
     // clear the message cache
-    const groupMembersClearChatsKey = isUserExistInGroup.Chat.participants.map(
-      (item) => `chats:${item.userId}:*`
-    );
-
+    const groupMembers = isUserExistInGroup.Chat.participants;
     await Promise.all([
       clearCacheFromRedis({
         key: `messages:${isUserExistInGroup.chatId}`,
       }),
-      clearCacheFromRedis({ key: groupMembersClearChatsKey }),
+      clearCacheFromRedis({
+        key: groupMembers.map((item) => `chats:${item.userId}`),
+      }),
     ]);
 
     io.to(groupId).emit("sendMessageForGroup", { message: msg });
@@ -345,14 +343,14 @@ export const socketHandler = (
       });
 
       // clear the message cache
-      const membersClearChatsKey = msg?.chat?.participants?.map(
-        (item) => `chats:${item.userId}:*`
-      );
+      const members = msg?.chat?.participants;
       await Promise.all([
         clearCacheFromRedis({
           key: `messages:${msg.chatId}`,
         }),
-        clearCacheFromRedis({ key: membersClearChatsKey }),
+        clearCacheFromRedis({
+          key: members.map((item) => `chats:${item.userId}`),
+        }),
       ]);
 
       if (isGroup) {
@@ -474,15 +472,15 @@ export const socketHandler = (
       isExitByAdmin
         ? [
             clearCacheFromRedis({
-              key: groupMembers?.map((item) => `chats:${item.userId}:*`),
+              key: `messages:${group?.chatId}`,
+            }),
+            clearCacheFromRedis({
+              key: groupMembers?.map((item) => `chats:${item.userId}`),
             }),
             clearCacheFromRedis({
               key: groupMembers?.map(
                 (item) => `chatKey:${item.userId}:${chatId}`
               ),
-            }),
-            clearCacheFromRedis({
-              key: `messages:${group?.chatId}`,
             }),
             clearCacheFromRedis({
               key: groupMembers?.map(
@@ -492,8 +490,10 @@ export const socketHandler = (
           ]
         : [
             clearCacheFromRedis({
+              key: `chats:${decodedPayload.userId}`,
+            }),
+            clearCacheFromRedis({
               key: [
-                `chats:${decodedPayload.userId}:*`,
                 `messages:${group?.chatId}`,
                 `group:${groupId}:${decodedPayload.userId}`,
                 `chatKey:${decodedPayload.userId}:${chatId}`,
@@ -558,12 +558,14 @@ export const socketHandler = (
       const groupMembers = group?.Chat.participants;
 
       // clear the caches
-      await clearCacheFromRedis({
-        key: groupMembers?.map((item) => `chats:${item.userId}:*`),
-      });
-      await clearCacheFromRedis({
-        key: groupMembers?.map((item) => `group:${groupId}:${item.userId}`),
-      });
+      await Promise.all([
+        clearCacheFromRedis({
+          key: groupMembers.map((item) => `chats:${item.userId}`),
+        }),
+        await clearCacheFromRedis({
+          key: groupMembers?.map((item) => `group:${groupId}:${item.userId}`),
+        }),
+      ]);
 
       io.to(groupId).emit("updateGroupDetails", {
         groupId,

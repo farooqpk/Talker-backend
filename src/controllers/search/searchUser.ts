@@ -5,9 +5,14 @@ import { getDataFromRedis, setDataInRedis } from "../../redis/index";
 export const searchUsers = async (req: Request, res: Response) => {
   try {
     const searchValue = req.query?.search as string;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 6;
+    const skip = (page - 1) * limit;
 
     if (!searchValue) {
-      const cachedUsers = await getDataFromRedis(`userid_not:${req.userId}`);
+      const cachedUsers = await getDataFromRedis(
+        `userid_not:${req.userId}:${page}`
+      );
       if (cachedUsers) return res.status(200).json(cachedUsers);
     }
 
@@ -25,6 +30,8 @@ export const searchUsers = async (req: Request, res: Response) => {
           },
         }),
       },
+      skip: skip,
+      take: limit,
       select: {
         userId: true,
         username: true,
@@ -37,9 +44,9 @@ export const searchUsers = async (req: Request, res: Response) => {
 
     if (!searchValue) {
       await setDataInRedis(
-        `userid_not:${req.userId}`,
+        `userid_not:${req.userId}:${page}`,
         modifiedUsers,
-        4 * 60 * 60
+        3 * 60 * 60
       );
     }
 

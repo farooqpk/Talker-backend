@@ -48,7 +48,7 @@ export const createGroup = async (req: Request, res: Response) => {
 
     // clear all the members chat cache
     await clearCacheFromRedis({
-      key: members.map((userId) => `chats:${userId}:*`),
+      key: members.map((userId) => `chats:${userId}`),
     });
 
     // emit event for members except admin

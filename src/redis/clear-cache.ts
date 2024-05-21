@@ -5,7 +5,7 @@ export const clearCacheFromRedis = async ({
   pattern,
 }: {
   key?: string | string[];
-  pattern?: string;
+  pattern?: string
 }) => {
   try {
     if (pattern) {
