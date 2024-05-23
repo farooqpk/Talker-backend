@@ -4,8 +4,9 @@ import { getDataFromRedis, setDataInRedis } from "../../redis/index";
 
 export const searchUsers = async (req: Request, res: Response) => {
   try {
+    const isInfiniteScroll = req.query.isInfiniteScroll;
     const searchValue = req.query?.search as string;
-    const page = parseInt(req.query.page as string) || 1;
+    const page = parseInt(req.query.page as string);
     const limit = 6;
     const skip = (page - 1) * limit;
 
@@ -30,8 +31,11 @@ export const searchUsers = async (req: Request, res: Response) => {
           },
         }),
       },
-      skip: skip,
-      take: limit,
+      ...(!searchValue &&
+        isInfiniteScroll === "true" && {
+          skip: skip,
+          take: limit,
+        }),
       select: {
         userId: true,
         username: true,
