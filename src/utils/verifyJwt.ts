@@ -10,7 +10,11 @@ export const verifyJwt = async (value: string) => {
     ) as DecodedPayload;
 
     if (decodedData) {
-      return { userId: decodedData.userId, username: decodedData.username };
+      return {
+        userId: decodedData.userId,
+        username: decodedData.username,
+        publicKey: decodedData.publicKey,
+      };
     } else {
       throw new Error("Invalid token or token cannot be decoded");
     }

@@ -34,11 +34,22 @@ export const signup = async (req: Request, res: Response) => {
       select: {
         userId: true,
         username: true,
+        publicKey: true,
       },
     });
 
-    const acessToken = createJwtToken(user.userId, user.username, "access");
-    const refreshToken = createJwtToken(user.userId, user.username, "refresh");
+    const acessToken = createJwtToken(
+      user.userId,
+      user.username,
+      user.publicKey,
+      "access"
+    );
+    const refreshToken = createJwtToken(
+      user.userId,
+      user.username,
+      user.publicKey,
+      "refresh"
+    );
 
     await clearFromRedis({ pattern: `userid_not:*` });
 

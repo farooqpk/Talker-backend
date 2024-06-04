@@ -25,6 +25,7 @@ export const createAccessTokenFromRefreshToken = async (
     const newAccessToken = createJwtToken(
       decodedData.userId,
       decodedData.username,
+      decodedData.publicKey,
       "access"
     );
 

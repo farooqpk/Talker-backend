@@ -20,7 +20,11 @@ export const verifyRoute = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "token is valid",
-      payload: tokenDecoded,
+      payload: {
+        userId: tokenDecoded.userId,
+        username: tokenDecoded.username,
+        publicKey: tokenDecoded.publicKey,
+      },
     });
   } catch (err) {
     console.log(err);

@@ -36,11 +36,13 @@ export const login = async (req: Request, res: Response) => {
     const acessToken = createJwtToken(
       isUserNameAlreadyExist.userId,
       isUserNameAlreadyExist.username,
+      isUserNameAlreadyExist.publicKey,
       "access"
     );
     const refreshToken = createJwtToken(
       isUserNameAlreadyExist.userId,
       isUserNameAlreadyExist.username,
+      isUserNameAlreadyExist.publicKey,
       "refresh"
     );
 
@@ -52,11 +54,10 @@ export const login = async (req: Request, res: Response) => {
       user: {
         userId: isUserNameAlreadyExist.userId,
         username: isUserNameAlreadyExist.username,
+        publicKey: isUserNameAlreadyExist.publicKey,
       },
     });
   } catch (error: any) {
-    console.log(error);
-
     return res.status(500).json({
       success: false,
       message: "An error occurred during login.",
