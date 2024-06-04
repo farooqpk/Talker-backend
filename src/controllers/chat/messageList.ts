@@ -33,7 +33,11 @@ export const messageList = async (req: Request, res: Response) => {
       },
     });
 
-    await setDataInRedis(`messages:${chatId}`, messages, 4 * 60 * 60);
+    await setDataInRedis({
+      key: `messages:${chatId}`,
+      data: messages,
+      expirationTimeInSeconds: 4 * 60 * 60,
+    });
 
     res.status(200).json(messages);
   } catch (error) {

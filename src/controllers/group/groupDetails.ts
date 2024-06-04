@@ -48,7 +48,11 @@ export const groupDetails = async (req: Request, res: Response) => {
       },
     });
 
-    await setDataInRedis(`group:${groupId}:${req.userId}`, group, 12 * 60 * 60);
+    await setDataInRedis({
+      key: `group:${groupId}:${req.userId}`,
+      data: group,
+      expirationTimeInSeconds: 12 * 60 * 60,
+    });
 
     return res.json(group);
   } catch (error) {

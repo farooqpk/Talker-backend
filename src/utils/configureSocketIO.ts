@@ -1,10 +1,9 @@
 import { verifyJwt } from "./verifyJwt";
 import { Server } from "socket.io";
 import { socketHandler } from "../socket/socketHandler";
-import { ONLINE_USERS_SOCKET } from "../server";
+import { clearFromRedis, setDataInRedis } from "../redis";
 
 export function configureSocketIO(io: Server) {
-  
   io.on("connection", async (socket) => {
     const token = socket.handshake.auth?.token;
     if (!token) {
@@ -16,12 +15,16 @@ export function configureSocketIO(io: Server) {
     try {
       const payload = await verifyJwt(token);
       console.log("Socket.IO: Connection successful");
-      ONLINE_USERS_SOCKET.set(payload.userId, socket.id);
+      await setDataInRedis({
+        key: `socket:${payload.userId}`,
+        data: socket.id,
+        isString: true,
+      });
       socket.broadcast.emit("isConnected", payload.userId);
       socketHandler(socket, io, payload);
-      socket.on("disconnect", () => {
+      socket.on("disconnect", async () => {
         socket.rooms.forEach((room) => socket.leave(room));
-        ONLINE_USERS_SOCKET.delete(payload.userId);
+        await clearFromRedis({ key: `socket:${payload.userId}` });
         socket.broadcast.emit("isDisconnected", payload.userId);
         console.log("Socket.IO: Disconnected");
       });

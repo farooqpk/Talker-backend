@@ -47,11 +47,11 @@ export const searchUsers = async (req: Request, res: Response) => {
     });
 
     if (!searchValue) {
-      await setDataInRedis(
-        `userid_not:${req.userId}:${page}`,
-        modifiedUsers,
-        3 * 60 * 60
-      );
+      await setDataInRedis({
+        key: `userid_not:${req.userId}:${page}`,
+        data: modifiedUsers,
+        expirationTimeInSeconds: 3 * 60 * 60,
+      });
     }
 
     res.status(200).json(modifiedUsers);

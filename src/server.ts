@@ -24,12 +24,10 @@ const io: Server = new Server(server, {
 
 configureSocketIO(io);
 
-export const ONLINE_USERS_SOCKET: Map<string, string> = new Map();
-
 export const eventEmitter = new EventEmitter();
 
 server.listen(PORT || 5000, async () => {
-  console.log(`Server listening on port ${PORT|| 5000}`);
+  console.log(`Server listening on port ${PORT || 5000}`);
   await connectPrisma();
   await connectToRedis();
 });

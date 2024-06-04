@@ -22,9 +22,11 @@ export const getChatKey = async (req: Request, res: Response) => {
     });
 
     await setDataInRedis(
-      `chatKey:${req.userId}:${chatId}`,
-      chatKey,
-      8 * 60 * 60,
+     {
+      key:`chatKey:${req.userId}:${chatId}`,
+      data:chatKey,
+      expirationTimeInSeconds:8 * 60 * 60,
+     }
     );
 
     res.status(200).json(chatKey);

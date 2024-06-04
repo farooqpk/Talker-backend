@@ -1,12 +1,8 @@
 import { Server, Socket } from "socket.io";
 import { DecodedPayload } from "../types/DecodedPayload";
 import { prisma } from "../utils/prisma";
-import { ONLINE_USERS_SOCKET, eventEmitter } from "../server";
-import {
-  clearCacheFromRedis,
-  getDataFromRedis,
-  setDataInRedis,
-} from "../redis";
+import { eventEmitter } from "../server";
+import { clearFromRedis, getDataFromRedis, setDataInRedis } from "../redis";
 import { s3Client } from "../utils/r2";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { R2_BUCKET_NAME } from "../config";
@@ -19,32 +15,30 @@ export const socketHandler = (
 ) => {
   console.log(`my username is ${decodedPayload.username}`);
 
-  socket.on("isOnline", (userId: string) => {
-    if (ONLINE_USERS_SOCKET.has(userId)) {
+  socket.on("isOnline", async (userId: string) => {
+    const socketId = await getDataFromRedis(`socket:${userId}`, true);
+    if (socketId) {
       socket.emit("isOnline", "online");
     } else {
       socket.emit("isOnline", "offline");
     }
   });
 
-  socket.on("isTyping", (data) => {
+  socket.on("isTyping", async (data) => {
     const { toUserId } = data;
-    if (
-      ONLINE_USERS_SOCKET.has(toUserId) &&
-      toUserId !== decodedPayload.userId
-    ) {
-      const socketId = ONLINE_USERS_SOCKET.get(toUserId);
+
+    const socketId = await getDataFromRedis(`socket:${toUserId}`, true);
+
+    if (socketId && toUserId !== decodedPayload.userId) {
       socketId && io.to(socketId).emit("isTyping", decodedPayload.userId);
     }
   });
 
-  socket.on("isNotTyping", (data) => {
+  socket.on("isNotTyping", async (data) => {
     const { toUserId } = data;
-    if (
-      ONLINE_USERS_SOCKET.has(toUserId) &&
-      toUserId !== decodedPayload.userId
-    ) {
-      const socketId = ONLINE_USERS_SOCKET.get(toUserId);
+    const socketId = await getDataFromRedis(`socket:${toUserId}`, true);
+
+    if (socketId && toUserId !== decodedPayload.userId) {
       socketId && io.to(socketId).emit("isNotTyping", decodedPayload.userId);
     }
   });
@@ -52,7 +46,11 @@ export const socketHandler = (
   socket.on(
     "sendPrivateMessage",
     async ({ recipientId, message, encryptedChatKey }) => {
-      const recipentSocketId = ONLINE_USERS_SOCKET.get(recipientId);
+      const recipentSocketId = await getDataFromRedis(
+        `socket:${recipientId}`,
+        true
+      );
+
       const users = [decodedPayload.userId, recipientId];
       const { content, contentType } = message;
       const IS_IMAGE_OR_AUDIO =
@@ -108,15 +106,15 @@ export const socketHandler = (
 
         // cache isAlreadyChatExist
         if (!isAlreadyChatExistCached) {
-          await setDataInRedis(
-            `isAlreadyChatExist:${users}`,
-            isAlreadyChatExist,
-            4 * 60 * 60
-          );
+          await setDataInRedis({
+            key: `isAlreadyChatExist:${users}`,
+            data: isAlreadyChatExist,
+            expirationTimeInSeconds: 4 * 60 * 60,
+          });
         }
 
         // clear both chat and message cache
-        await clearCacheFromRedis({
+        await clearFromRedis({
           key: [
             `chats:${decodedPayload.userId}`,
             `chats:${recipientId}`,
@@ -187,7 +185,7 @@ export const socketHandler = (
         });
 
         // clear all the members chat cache
-        await clearCacheFromRedis({
+        await clearFromRedis({
           key: [
             `chats:${decodedPayload.userId}`,
             `chats:${recipientId}`,
@@ -285,10 +283,10 @@ export const socketHandler = (
     // clear the message cache
     const groupMembers = isUserExistInGroup.Chat.participants;
     await Promise.all([
-      clearCacheFromRedis({
+      clearFromRedis({
         key: `messages:${isUserExistInGroup.chatId}`,
       }),
-      clearCacheFromRedis({
+      clearFromRedis({
         key: groupMembers.map((item) => `chats:${item.userId}`),
       }),
     ]);
@@ -345,10 +343,10 @@ export const socketHandler = (
       // clear the message cache
       const members = msg?.chat?.participants;
       await Promise.all([
-        clearCacheFromRedis({
+        clearFromRedis({
           key: `messages:${msg.chatId}`,
         }),
-        clearCacheFromRedis({
+        clearFromRedis({
           key: members.map((item) => `chats:${item.userId}`),
         }),
       ]);
@@ -356,7 +354,10 @@ export const socketHandler = (
       if (isGroup) {
         io.to(groupId!).emit("deleteMessage", messageId);
       } else {
-        const recipentSocketId = ONLINE_USERS_SOCKET.get(recipientId!);
+        const recipentSocketId = await getDataFromRedis(
+          `socket:${recipientId}`
+        );
+
         io.to(
           recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]
         ).emit("deleteMessage", messageId);
@@ -471,28 +472,28 @@ export const socketHandler = (
     await Promise.all(
       isExitByAdmin
         ? [
-            clearCacheFromRedis({
+            clearFromRedis({
               key: `messages:${group?.chatId}`,
             }),
-            clearCacheFromRedis({
+            clearFromRedis({
               key: groupMembers?.map((item) => `chats:${item.userId}`),
             }),
-            clearCacheFromRedis({
+            clearFromRedis({
               key: groupMembers?.map(
                 (item) => `chatKey:${item.userId}:${chatId}`
               ),
             }),
-            clearCacheFromRedis({
+            clearFromRedis({
               key: groupMembers?.map(
                 (item) => `group:${groupId}:${item.userId}`
               ),
             }),
           ]
         : [
-            clearCacheFromRedis({
+            clearFromRedis({
               key: `chats:${decodedPayload.userId}`,
             }),
-            clearCacheFromRedis({
+            clearFromRedis({
               key: [
                 `messages:${group?.chatId}`,
                 `group:${groupId}:${decodedPayload.userId}`,
@@ -509,11 +510,12 @@ export const socketHandler = (
     });
   });
 
-  eventEmitter.on("groupCreated", (users) => {
+  eventEmitter.on("groupCreated", async (users) => {
     let usersSocket: string[] = [];
     for (let i = 0; i < users.length; i++) {
-      if (ONLINE_USERS_SOCKET.has(users[i])) {
-        usersSocket.push(ONLINE_USERS_SOCKET.get(users[i] as string)!);
+      const socketId = await getDataFromRedis(`socket:${users[i]}`, true);
+      if (socketId) {
+        usersSocket.push(socketId);
       }
     }
     io.to(usersSocket).emit("groupCreated");
@@ -559,10 +561,10 @@ export const socketHandler = (
 
       // clear the caches
       await Promise.all([
-        clearCacheFromRedis({
+        clearFromRedis({
           key: groupMembers.map((item) => `chats:${item.userId}`),
         }),
-        await clearCacheFromRedis({
+        await clearFromRedis({
           key: groupMembers?.map((item) => `group:${groupId}:${item.userId}`),
         }),
       ]);

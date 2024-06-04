@@ -35,14 +35,14 @@ export const findUser = async (req: Request, res: Response) => {
       },
     });
 
-    await setDataInRedis(
-      `user:${userId}`,
-      {
+    await setDataInRedis({
+      key: `user:${userId}`,
+      data: {
         ...user,
         ...chat,
       },
-      12 * 60 * 60
-    );
+      expirationTimeInSeconds: 12 * 60 * 60,
+    });
 
     res.status(200).json({
       ...user,
