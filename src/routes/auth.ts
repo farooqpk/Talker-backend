@@ -11,12 +11,16 @@ import {
   signupSchema,
   updateUsernameSchema,
 } from "../schemas/authSchema";
+import { loginToken } from "../controllers/auth/loginToken";
 
 export const authRouter: Router = Express.Router();
 
 authRouter.post("/signup", validateData(signupSchema), signup);
 
 authRouter.post("/login", validateData(loginSchema), login);
+
+// request for access and refresh token after login
+authRouter.post("/login/token", loginToken);
 
 authRouter.get("/verifyRoute", verifyRoute);
 
