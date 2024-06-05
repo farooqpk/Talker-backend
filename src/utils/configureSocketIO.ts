@@ -19,7 +19,6 @@ export function configureSocketIO(io: Server) {
         key: `socket:${payload.userId}`,
         data: socket.id,
         isString: true,
-        expirationTimeInSeconds: 60 * 60,// 1 hour
       });
       socket.broadcast.emit("isConnected", payload.userId);
       socketHandler(socket, io, payload);

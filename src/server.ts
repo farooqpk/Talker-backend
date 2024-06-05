@@ -11,11 +11,11 @@ import { PORT } from "./config";
 dotenv.config();
 
 const app: Express = express();
-const server = http.createServer(app);
+export const server = http.createServer(app);
 
 configureExpress(app);
 
-const io: Server = new Server(server, {
+export const io: Server = new Server(server, {
   cors: {
     // origin: process.env.CLIENT_URL,
     credentials: true,
