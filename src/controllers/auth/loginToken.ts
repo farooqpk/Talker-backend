@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getDataFromRedis } from "../../redis";
+import { clearFromRedis, getDataFromRedis } from "../../redis";
 import { prisma } from "../../utils/prisma";
 import { createJwtToken } from "../../utils/createJwtToken";
 
@@ -44,6 +44,9 @@ export const loginToken = async (req: Request, res: Response) => {
         message: "login token is invalid",
       });
     }
+
+    // remove login token from redis
+    await clearFromRedis({ key: `loginToken:${userId}` });
 
     const accesstoken = createJwtToken(
       user.userId,
