@@ -3,6 +3,8 @@ import { createJwtToken } from "../../utils/createJwtToken";
 import { prisma } from "../../utils/prisma";
 import * as bcrypt from "bcrypt";
 import { clearFromRedis } from "../../redis";
+import { NODE_ENV } from "../../config";
+import dayjs from "dayjs";
 
 export const signup = async (req: Request, res: Response) => {
   try {
@@ -38,13 +40,13 @@ export const signup = async (req: Request, res: Response) => {
       },
     });
 
-    const acessToken = createJwtToken(
+    const accesstoken = createJwtToken(
       user.userId,
       user.username,
       user.publicKey,
       "access"
     );
-    const refreshToken = createJwtToken(
+    const refreshtoken = createJwtToken(
       user.userId,
       user.username,
       user.publicKey,
@@ -53,11 +55,23 @@ export const signup = async (req: Request, res: Response) => {
 
     await clearFromRedis({ pattern: `userid_not:*` });
 
+    const cookieOptions: CookieOptions = {
+      httpOnly: true,
+      secure: NODE_ENV === "development" ? false : true,
+    };
+
+    res.cookie("accesstoken", accesstoken, {
+      ...cookieOptions,
+      expires: dayjs().add(1, "hours").toDate(),
+    });
+    res.cookie("refreshtoken", refreshtoken, {
+      ...cookieOptions,
+      expires: dayjs().add(14, "days").toDate(),
+    });
+
     return res.status(201).send({
       success: true,
       message: "User created successfully",
-      accesstoken: acessToken,
-      refreshtoken: refreshToken,
       user,
     });
   } catch (error: any) {

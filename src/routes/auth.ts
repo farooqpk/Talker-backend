@@ -12,6 +12,7 @@ import {
   updateUsernameSchema,
 } from "../schemas/authSchema";
 import { loginToken } from "../controllers/auth/loginToken";
+import { logout } from "../controllers/auth/logout";
 
 export const authRouter: Router = Express.Router();
 
@@ -31,3 +32,5 @@ authRouter.post(
   [verifyToken, validateData(updateUsernameSchema)],
   updateUsername
 );
+
+authRouter.delete("/logout",logout)

@@ -12,7 +12,7 @@ export const createJwtToken = (
     { userId, username, publicKey },
     tokenType === "access" ? ACCESS_TOKEN_SECRET! : REFRESH_TOKEN_SECRET!,
     {
-      expiresIn: tokenType === "access" ? "1h" : "7d",
+      expiresIn: tokenType === "access" ? "1h" : "14d",
     }
   );
 };

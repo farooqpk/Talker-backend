@@ -5,15 +5,35 @@ import { clearFromRedis, setDataInRedis } from "../redis";
 
 export function configureSocketIO(io: Server) {
   io.on("connection", async (socket) => {
-    const token = socket.handshake.auth?.token;
+    const cookies = socket.handshake.headers.cookie;
+
+    if (!cookies) {
+      console.error("Socket.IO: No cookies found");
+      socket.emit("unauthorized", "No cookies found");
+      socket.disconnect(true);
+      return;
+    }
+
+    const tokenMatch = cookies.match(/accesstoken=([^;]*)/);
+    const token = tokenMatch ? tokenMatch[1] : null;
+
     if (!token) {
       console.error("Socket.IO: Access token not found");
       socket.emit("unauthorized", "Access token not found");
       socket.disconnect(true);
       return;
     }
+
     try {
       const payload = await verifyJwt(token);
+
+      if (!payload) {
+        console.error("Socket.IO: Access token not valid");
+        socket.emit("unauthorized", "Access token not valid");
+        socket.disconnect(true);
+        return;
+      }
+
       console.log("Socket.IO: Connection successful");
       await setDataInRedis({
         key: `socket:${payload.userId}`,
@@ -30,7 +50,8 @@ export function configureSocketIO(io: Server) {
       });
     } catch (error) {
       console.error("Socket.IO: Authentication failed", error);
-      return socket.disconnect(true);
+      socket.emit("unauthorized", "Authentication failed");
+      socket.disconnect(true);
     }
   });
 }

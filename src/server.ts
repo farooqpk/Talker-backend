@@ -7,7 +7,7 @@ import { EventEmitter } from "events";
 import { connectToRedis } from "./utils/redis";
 import { configureExpress } from "./utils/configureExpress";
 import { configureSocketIO } from "./utils/configureSocketIO";
-import { PORT } from "./config";
+import { CLIENT_URL, PORT } from "./config";
 dotenv.config();
 
 const app: Express = express();
@@ -17,7 +17,7 @@ configureExpress(app);
 
 export const io: Server = new Server(server, {
   cors: {
-    // origin: process.env.CLIENT_URL,
+    origin: CLIENT_URL,
     credentials: true,
   },
 });

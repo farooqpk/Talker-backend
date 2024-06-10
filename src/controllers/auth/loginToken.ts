@@ -1,7 +1,9 @@
-import { Request, Response } from "express";
+import { CookieOptions, Request, Response } from "express";
 import { clearFromRedis, getDataFromRedis } from "../../redis";
 import { prisma } from "../../utils/prisma";
 import { createJwtToken } from "../../utils/createJwtToken";
+import { NODE_ENV } from "../../config";
+import dayjs from "dayjs";
 
 export const loginToken = async (req: Request, res: Response) => {
   try {
@@ -61,11 +63,23 @@ export const loginToken = async (req: Request, res: Response) => {
       "refresh"
     );
 
+    const cookieOptions: CookieOptions = {
+      httpOnly: true,
+      secure: NODE_ENV === "development" ? false : true,
+    };
+
+    res.cookie("accesstoken", accesstoken, {
+      ...cookieOptions,
+      expires: dayjs().add(1, "hours").toDate(),
+    });
+    res.cookie("refreshtoken", refreshtoken, {
+      ...cookieOptions,
+      expires: dayjs().add(14, "days").toDate(),
+    });
+
     return res.status(200).json({
       success: true,
       message: "login token verified successfully",
-      accesstoken,
-      refreshtoken,
     });
   } catch (error) {
     res.status(500).json(error);

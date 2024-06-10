@@ -9,6 +9,7 @@ const {
   R2_ACCESS_KEY,
   R2_SECRET_KEY,
   R2_BUCKET_NAME,
+  NODE_ENV,
 } = process.env;
 
 if (
@@ -21,7 +22,8 @@ if (
   !R2_ACCOUNT_ID ||
   !R2_ACCESS_KEY ||
   !R2_SECRET_KEY ||
-  !R2_BUCKET_NAME
+  !R2_BUCKET_NAME ||
+  !NODE_ENV
 ) {
   throw new Error("Missing environment variables");
 }
@@ -37,4 +39,5 @@ export {
   R2_ACCESS_KEY,
   R2_SECRET_KEY,
   R2_BUCKET_NAME,
+  NODE_ENV,
 };
