@@ -4,3 +4,11 @@ export type EncryptedChatKey = {
     encryptedKey: string;
   }>;
 };
+
+export enum ContentType {
+  TEXT = "TEXT",
+  AUDIO = "AUDIO",
+  IMAGE = "IMAGE",
+}
+
+

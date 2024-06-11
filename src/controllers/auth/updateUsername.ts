@@ -29,10 +29,7 @@ export const updateUsername = async (req: Request, res: Response) => {
       },
     });
 
-    await Promise.all([
-      clearFromRedis({ pattern: `userid_not:*` }),
-      clearFromRedis({ key: `user:${user.userId}` }),
-    ]);
+    await clearFromRedis({ pattern: `userid_not:*` });
     return res.status(200).json(user);
   } catch (error) {
     return res.status(500).json(error);
