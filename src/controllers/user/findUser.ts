@@ -35,6 +35,13 @@ export const findUser = async (req: Request, res: Response) => {
       },
     });
 
+    if (!user || !chat) {
+      return res.status(404).json({
+        success: false,
+        message: "user not found",
+      });
+    }
+
     await setDataInRedis({
       key: `user:${userId}`,
       data: {
