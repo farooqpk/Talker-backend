@@ -43,8 +43,9 @@ model Message {
   messageId   String      @id @default(auto()) @map("_id") @db.ObjectId
   chatId      String      @db.ObjectId
   senderId    String      @db.ObjectId
-  content     String
+  content     Bytes?
   contentType ContentType
+  mediaPath   String?
   createdAt   DateTime
   isDeleted   Boolean     @default(false)
 
@@ -78,7 +79,7 @@ model ChatKey {
   id           String @id @default(auto()) @map("_id") @db.ObjectId
   chatId       String @db.ObjectId
   userId       String @db.ObjectId
-  encryptedKey String
+  encryptedKey Bytes
 
   chat Chat @relation(fields: [chatId], references: [chatId])
   user User @relation(fields: [userId], references: [userId])

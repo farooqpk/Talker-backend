@@ -5,20 +5,17 @@ import {
   SOCKET_PAYLOAD,
 } from "../../utils/configureSocketIO";
 import { prisma } from "../../utils/prisma";
-import { v4 as uuidv4 } from "uuid";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { R2_BUCKET_NAME } from "../../config";
-import { s3Client } from "../../utils/r2";
 import { ContentType } from "../../types/common";
 import { SocketEvents } from "../../events";
 
 type PrivateChatType = {
   recipientId: string;
   message: {
-    content: ArrayBuffer;
+    content?: ArrayBuffer;
     contentType: ContentType;
+    mediaPath?: string;
   };
-  encryptedChatKey: Array<{ userId: string; encryptedKey: string }>;
+  encryptedChatKey: Array<{ userId: string; encryptedKey: ArrayBuffer }>;
 };
 
 export const sendPrivateMsgHandler = async ({
@@ -32,9 +29,13 @@ export const sendPrivateMsgHandler = async ({
   );
 
   const users = [SOCKET_PAYLOAD.userId, recipientId];
-  const { content, contentType } = message;
+  const { content, contentType, mediaPath } = message;
   const IS_IMAGE_OR_AUDIO =
     contentType === ContentType.IMAGE || contentType === ContentType.AUDIO;
+
+  if ((!IS_IMAGE_OR_AUDIO && !content) || (IS_IMAGE_OR_AUDIO && !mediaPath)) {
+    return;
+  }
 
   const isAlreadyChatExistCached = await getDataFromRedis(
     `isAlreadyChatExist:${users}`
@@ -53,26 +54,14 @@ export const sendPrivateMsgHandler = async ({
     }));
 
   if (isAlreadyChatExist) {
-    const uniqueKey = `${isAlreadyChatExist.chatId}/${uuidv4()}.json`;
-
-    if (IS_IMAGE_OR_AUDIO) {
-      const putObjectCommand = new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: uniqueKey,
-        Body: JSON.stringify(content),
-        ContentType: "application/json",
-      });
-      await s3Client.send(putObjectCommand);
-      console.log("uploaded successfully");
-    }
-
     const msg = await prisma.message.create({
       data: {
-        content: IS_IMAGE_OR_AUDIO ? uniqueKey : content,
+        content: !IS_IMAGE_OR_AUDIO ? Buffer.from(content!) : null,
         createdAt: new Date(),
         chatId: isAlreadyChatExist.chatId,
         senderId: SOCKET_PAYLOAD.userId,
         contentType: message.contentType,
+        mediaPath: IS_IMAGE_OR_AUDIO ? mediaPath : null,
       },
       include: {
         sender: {
@@ -114,12 +103,10 @@ export const sendPrivateMsgHandler = async ({
         createdAt: new Date(),
         ChatKey: {
           createMany: {
-            data: encryptedChatKey.map(
-              (item: { userId: string; encryptedKey: string }) => ({
-                userId: item.userId,
-                encryptedKey: item.encryptedKey,
-              })
-            ),
+            data: encryptedChatKey.map((item) => ({
+              userId: item.userId,
+              encryptedKey: Buffer.from(item.encryptedKey),
+            })),
           },
         },
         participants: {
@@ -133,26 +120,14 @@ export const sendPrivateMsgHandler = async ({
       },
     });
 
-    const uniqueKey = `${chat.chatId}/${uuidv4()}.json`;
-
-    if (IS_IMAGE_OR_AUDIO) {
-      const putObjectCommand = new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: uniqueKey,
-        Body: JSON.stringify(content),
-        ContentType: "application/json",
-      });
-      await s3Client.send(putObjectCommand);
-      console.log("uploaded successfully");
-    }
-
     const msg = await prisma.message.create({
       data: {
-        content: IS_IMAGE_OR_AUDIO ? uniqueKey : content,
+        content: !IS_IMAGE_OR_AUDIO ? Buffer.from(content!) : null,
         createdAt: new Date(),
         chatId: chat.chatId,
         senderId: SOCKET_PAYLOAD.userId,
         contentType: message.contentType,
+        mediaPath: IS_IMAGE_OR_AUDIO ? mediaPath : null,
       },
       include: {
         sender: {

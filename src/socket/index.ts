@@ -37,4 +37,6 @@ export const socketHandler = () => {
   eventEmitter.on(AppEvents.GROUP_CREATED, groupCreatedHandler);
 
   SOCKET.on(SocketEvents.UPDATE_GROUP_DETAILS, updateGroupDetailsHandler);
+
+ 
 };
