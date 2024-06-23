@@ -59,6 +59,7 @@ export const sendGroupMsgHandler = async (
       content: !IS_IMAGE_OR_AUDIO ? content : null,
       createdAt: new Date(),
       senderId: payload.userId,
+      mediaPath: IS_IMAGE_OR_AUDIO ? mediaPath : null,
     },
     include: {
       sender: {

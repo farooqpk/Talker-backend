@@ -49,8 +49,7 @@ export const sendPrivateMsgHandler = async (
     }));
 
   if (isAlreadyChatExist) {
-    console.log("Chat already exist");
-
+   
     const msg = await prisma.message.create({
       data: {
         content: !IS_IMAGE_OR_AUDIO ? content : null,

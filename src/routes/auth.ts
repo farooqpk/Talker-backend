@@ -33,4 +33,4 @@ authRouter.post(
   updateUsername
 );
 
-authRouter.delete("/logout",logout)
+authRouter.post("/logout",logout)

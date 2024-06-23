@@ -36,7 +36,7 @@ export const messageList = async (req: Request, res: Response) => {
     await setDataInRedis({
       key: `messages:${chatId}`,
       data: messages,
-      expirationTimeInSeconds: 4 * 60 * 60,
+      expirationTimeInSeconds: 2 * 60 * 60,
     });
 
     res.status(200).json(messages);

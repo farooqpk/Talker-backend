@@ -51,7 +51,7 @@ export function configureSocketIO(io: Server) {
         socket.rooms.forEach((room) => socket.leave(room));
         await clearFromRedis({ key: `socket:${payload.userId}` });
         socket.broadcast.emit(SocketEvents.IS_DISCONNECTED, payload.userId);
-        console.log("Socket.IO: Disconnected");
+        console.log(`Socket.IO: ${payload.username} disconnected`);
       });
     } catch (error) {
       console.error("Socket.IO: Authentication failed", error);

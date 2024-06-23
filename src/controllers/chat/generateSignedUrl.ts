@@ -15,7 +15,7 @@ export const generateSignedUrl = async (req: Request, res: Response) => {
       });
     }
 
-    const uniqueKey = `messages/${uuidv4()}`;
+    const uniqueKey = uuidv4();
 
     const command = new PutObjectCommand({
       Bucket: R2_BUCKET_NAME!,
