@@ -11,11 +11,11 @@ import { SocketEvents } from "../../events";
 type PrivateChatType = {
   recipientId: string;
   message: {
-    content?: ArrayBuffer;
+    content?: string;
     contentType: ContentType;
     mediaPath?: string;
   };
-  encryptedChatKey: Array<{ userId: string; encryptedKey: ArrayBuffer }>;
+  encryptedChatKey: Array<{ userId: string; encryptedKey: string }>;
 };
 
 export const sendPrivateMsgHandler = async ({
@@ -56,7 +56,7 @@ export const sendPrivateMsgHandler = async ({
   if (isAlreadyChatExist) {
     const msg = await prisma.message.create({
       data: {
-        content: !IS_IMAGE_OR_AUDIO ? Buffer.from(content!) : null,
+        content: !IS_IMAGE_OR_AUDIO ? content : null,
         createdAt: new Date(),
         chatId: isAlreadyChatExist.chatId,
         senderId: SOCKET_PAYLOAD.userId,
@@ -105,7 +105,7 @@ export const sendPrivateMsgHandler = async ({
           createMany: {
             data: encryptedChatKey.map((item) => ({
               userId: item.userId,
-              encryptedKey: Buffer.from(item.encryptedKey),
+              encryptedKey: item.encryptedKey,
             })),
           },
         },
@@ -122,7 +122,7 @@ export const sendPrivateMsgHandler = async ({
 
     const msg = await prisma.message.create({
       data: {
-        content: !IS_IMAGE_OR_AUDIO ? Buffer.from(content!) : null,
+        content: !IS_IMAGE_OR_AUDIO ? content : null,
         createdAt: new Date(),
         chatId: chat.chatId,
         senderId: SOCKET_PAYLOAD.userId,
@@ -148,7 +148,7 @@ export const sendPrivateMsgHandler = async ({
       recipentSocketId ? [recipentSocketId, SOCKET.id] : [SOCKET.id]
     ).emit(SocketEvents.SEND_PRIVATE_MESSAGE, {
       isRefetchChatList: true,
-      // send encrypted chat keys for the initial chat, because we cant get chat key immediatly from client side by chat key api call
+      // send encrypted chat keys for the initial chat, because we cant get chat key immediatly from client side from chat key api call
       message: { ...msg, encryptedChatKeys: encryptedChatKey },
     });
   }

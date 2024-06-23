@@ -7,8 +7,9 @@ import { SocketEvents } from "../../events";
 type GroupMsgType = {
   groupId: string;
   message: {
-    content: ArrayBuffer;
+    content?: string;
     contentType: ContentType;
+    mediaPath?: string;
   };
 };
 
@@ -16,8 +17,15 @@ export const sendGroupMsgHandler = async ({
   groupId,
   message,
 }: GroupMsgType) => {
-  const { content, contentType } = message;
+  const { content, contentType, mediaPath } = message;
 
+  const IS_IMAGE_OR_AUDIO =
+    contentType === ContentType.IMAGE || contentType === ContentType.AUDIO;
+
+  if ((!IS_IMAGE_OR_AUDIO && !content) || (IS_IMAGE_OR_AUDIO && !mediaPath)) {
+    return;
+  }
+  
   const isUserExistInGroup = await prisma.group.findFirst({
     where: {
       groupId,
@@ -48,7 +56,7 @@ export const sendGroupMsgHandler = async ({
     data: {
       chatId: isUserExistInGroup.chatId,
       contentType,
-      content,
+      content:!IS_IMAGE_OR_AUDIO ? content : null,
       createdAt: new Date(),
       senderId: SOCKET_PAYLOAD.userId,
     },

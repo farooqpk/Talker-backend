@@ -17,18 +17,16 @@ export const generateSignedUrl = async (req: Request, res: Response) => {
 
     const uniqueKey = `messages/${uuidv4()}`;
 
-    const url = await getSignedUrl(
-      s3Client,
-      new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME!,
-        Key: uniqueKey,
-        ContentType: "application/octet-stream",
-        ContentLength: filesize,
-      }),
-      {
-        expiresIn: 60, // 1 minutes
-      }
-    );
+    const command = new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME!,
+      Key: uniqueKey,
+      ContentType: "application/octet-stream",
+      ContentLength: filesize,
+    });
+
+    const url = await getSignedUrl(s3Client, command, {
+      expiresIn: 60, // 1 minutes
+    });
 
     return res.status(200).json({
       success: true,
