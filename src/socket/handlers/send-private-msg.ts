@@ -1,11 +1,6 @@
 import { clearFromRedis, getDataFromRedis, setDataInRedis } from "../../redis";
-import {
-  IO_SERVER,
-  SOCKET,
-  SOCKET_PAYLOAD,
-} from "../../utils/configureSocketIO";
 import { prisma } from "../../utils/prisma";
-import { ContentType } from "../../types/common";
+import { ContentType, SocketHandlerParams } from "../../types/common";
 import { SocketEvents } from "../../events";
 
 type PrivateChatType = {
@@ -18,17 +13,17 @@ type PrivateChatType = {
   encryptedChatKey: Array<{ userId: string; encryptedKey: string }>;
 };
 
-export const sendPrivateMsgHandler = async ({
-  recipientId,
-  message,
-  encryptedChatKey,
-}: PrivateChatType) => {
+export const sendPrivateMsgHandler = async (
+  { io, payload, socket }: SocketHandlerParams,
+  { recipientId, message, encryptedChatKey }: PrivateChatType
+) => {
   const recipentSocketId = await getDataFromRedis(
     `socket:${recipientId}`,
     true
   );
 
-  const users = [SOCKET_PAYLOAD.userId, recipientId];
+  const users = [payload.userId, recipientId];
+
   const { content, contentType, mediaPath } = message;
   const IS_IMAGE_OR_AUDIO =
     contentType === ContentType.IMAGE || contentType === ContentType.AUDIO;
@@ -54,12 +49,14 @@ export const sendPrivateMsgHandler = async ({
     }));
 
   if (isAlreadyChatExist) {
+    console.log("Chat already exist");
+
     const msg = await prisma.message.create({
       data: {
         content: !IS_IMAGE_OR_AUDIO ? content : null,
         createdAt: new Date(),
         chatId: isAlreadyChatExist.chatId,
-        senderId: SOCKET_PAYLOAD.userId,
+        senderId: payload.userId,
         contentType: message.contentType,
         mediaPath: IS_IMAGE_OR_AUDIO ? mediaPath : null,
       },
@@ -85,18 +82,19 @@ export const sendPrivateMsgHandler = async ({
     // clear both chat and message cache
     await clearFromRedis({
       key: [
-        `chats:${SOCKET_PAYLOAD.userId}`,
+        `chats:${payload.userId}`,
         `chats:${recipientId}`,
         `messages:${isAlreadyChatExist.chatId}`,
       ],
     });
 
-    IO_SERVER.to(
-      recipentSocketId ? [recipentSocketId, SOCKET.id] : [SOCKET.id]
-    ).emit(SocketEvents.SEND_PRIVATE_MESSAGE, {
-      isRefetchChatList: false,
-      message: msg,
-    });
+    io.to(recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]).emit(
+      SocketEvents.SEND_PRIVATE_MESSAGE,
+      {
+        isRefetchChatList: false,
+        message: msg,
+      }
+    );
   } else {
     const chat = await prisma.chat.create({
       data: {
@@ -125,7 +123,7 @@ export const sendPrivateMsgHandler = async ({
         content: !IS_IMAGE_OR_AUDIO ? content : null,
         createdAt: new Date(),
         chatId: chat.chatId,
-        senderId: SOCKET_PAYLOAD.userId,
+        senderId: payload.userId,
         contentType: message.contentType,
         mediaPath: IS_IMAGE_OR_AUDIO ? mediaPath : null,
       },
@@ -141,15 +139,16 @@ export const sendPrivateMsgHandler = async ({
 
     // clear all the members chat cache
     await clearFromRedis({
-      key: [`chats:${SOCKET_PAYLOAD.userId}`, `chats:${recipientId}`],
+      key: [`chats:${payload.userId}`, `chats:${recipientId}`],
     });
 
-    IO_SERVER.to(
-      recipentSocketId ? [recipentSocketId, SOCKET.id] : [SOCKET.id]
-    ).emit(SocketEvents.SEND_PRIVATE_MESSAGE, {
-      isRefetchChatList: true,
-      // send encrypted chat keys for the initial chat, because we cant get chat key immediatly from client side from chat key api call
-      message: { ...msg, encryptedChatKeys: encryptedChatKey },
-    });
+    io.to(recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]).emit(
+      SocketEvents.SEND_PRIVATE_MESSAGE,
+      {
+        isRefetchChatList: true,
+        // send encrypted chat keys for the initial chat, because we cant get chat key immediatly from client side from chat key api call
+        message: { ...msg, encryptedChatKeys: encryptedChatKey },
+      }
+    );
   }
 };

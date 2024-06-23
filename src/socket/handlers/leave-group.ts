@@ -1,8 +1,15 @@
-import { SOCKET } from "../../utils/configureSocketIO";
+import { SocketHandlerParams } from "../../types/common";
 
-export const leaveGroupHandler = ({ groupIds }: { groupIds: string[] }) => {
+type LeaveGroup = {
+  groupIds: string[];
+};
+
+export const leaveGroupHandler = (
+  { socket }: SocketHandlerParams,
+  { groupIds }: LeaveGroup
+) => {
   groupIds?.forEach((id: string) => {
-    SOCKET.leave(id);
+    socket.leave(id);
     console.log("leaveGroup", id);
   });
 };

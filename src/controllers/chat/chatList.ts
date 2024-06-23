@@ -4,8 +4,8 @@ import { getDataFromRedis, setDataInRedis } from "../../redis/index";
 
 export const chatList = async (req: Request, res: Response) => {
   try {
-    // const cachedChats = await getDataFromRedis(`chats:${req.userId}`);
-    // if (cachedChats) return res.status(200).json(cachedChats);
+    const cachedChats = await getDataFromRedis(`chats:${req.userId}`);
+    if (cachedChats) return res.status(200).json(cachedChats);
 
     const chats = await prisma.chat.findMany({
       where: {
@@ -63,11 +63,11 @@ export const chatList = async (req: Request, res: Response) => {
       );
     });
 
-    // await setDataInRedis({
-    //   key: `chats:${req.userId}`,
-    //   data: chats,
-    //   expirationTimeInSeconds: 4 * 60 * 60,
-    // });
+    await setDataInRedis({
+      key: `chats:${req.userId}`,
+      data: chats,
+      expirationTimeInSeconds: 4 * 60 * 60,
+    });
     res.status(200).json(chats);
   } catch (error) {
     res.status(500).json({

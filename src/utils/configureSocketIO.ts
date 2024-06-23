@@ -1,13 +1,8 @@
 import { verifyJwt } from "./verifyJwt";
-import { Server, Socket } from "socket.io";
+import { Server } from "socket.io";
 import { socketHandler } from "../socket";
 import { clearFromRedis, setDataInRedis } from "../redis";
 import { SocketEvents } from "../events";
-import { DecodedPayload } from "../types/DecodedPayload";
-
-export let SOCKET: Socket;
-export let IO_SERVER: Server;
-export let SOCKET_PAYLOAD: DecodedPayload;
 
 export function configureSocketIO(io: Server) {
   io.on(SocketEvents.CONNECTION, async (socket) => {
@@ -50,10 +45,7 @@ export function configureSocketIO(io: Server) {
       socket.broadcast.emit(SocketEvents.IS_CONNECTED, payload.userId);
 
       // Socket handler
-      SOCKET = socket;
-      IO_SERVER = io;
-      SOCKET_PAYLOAD = payload;
-      socketHandler();
+      socketHandler(socket, io, payload);
 
       socket.on(SocketEvents.DISCONNECT, async () => {
         socket.rooms.forEach((room) => socket.leave(room));

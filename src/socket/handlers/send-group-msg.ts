@@ -1,8 +1,8 @@
 import { ContentType } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
-import { IO_SERVER, SOCKET_PAYLOAD } from "../../utils/configureSocketIO";
 import { clearFromRedis } from "../../redis";
 import { SocketEvents } from "../../events";
+import { SocketHandlerParams } from "../../types/common";
 
 type GroupMsgType = {
   groupId: string;
@@ -13,10 +13,10 @@ type GroupMsgType = {
   };
 };
 
-export const sendGroupMsgHandler = async ({
-  groupId,
-  message,
-}: GroupMsgType) => {
+export const sendGroupMsgHandler = async (
+  { io, payload }: SocketHandlerParams,
+  { groupId, message }: GroupMsgType
+) => {
   const { content, contentType, mediaPath } = message;
 
   const IS_IMAGE_OR_AUDIO =
@@ -25,14 +25,14 @@ export const sendGroupMsgHandler = async ({
   if ((!IS_IMAGE_OR_AUDIO && !content) || (IS_IMAGE_OR_AUDIO && !mediaPath)) {
     return;
   }
-  
+
   const isUserExistInGroup = await prisma.group.findFirst({
     where: {
       groupId,
       Chat: {
         participants: {
           some: {
-            userId: SOCKET_PAYLOAD.userId,
+            userId: payload.userId,
           },
         },
       },
@@ -56,9 +56,9 @@ export const sendGroupMsgHandler = async ({
     data: {
       chatId: isUserExistInGroup.chatId,
       contentType,
-      content:!IS_IMAGE_OR_AUDIO ? content : null,
+      content: !IS_IMAGE_OR_AUDIO ? content : null,
       createdAt: new Date(),
-      senderId: SOCKET_PAYLOAD.userId,
+      senderId: payload.userId,
     },
     include: {
       sender: {
@@ -81,5 +81,5 @@ export const sendGroupMsgHandler = async ({
     }),
   ]);
 
-  IO_SERVER.to(groupId).emit(SocketEvents.SEND_GROUP_MESSAGE, { message: msg });
+  io.to(groupId).emit(SocketEvents.SEND_GROUP_MESSAGE, { message: msg });
 };

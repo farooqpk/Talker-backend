@@ -1,11 +1,14 @@
-import { SOCKET, SOCKET_PAYLOAD } from "../../utils/configureSocketIO";
+import { SocketHandlerParams } from "../../types/common";
 import { prisma } from "../../utils/prisma";
 
-export const joinGroupHandler = async ({
-  groupIds,
-}: {
+type JoinGroup = {
   groupIds: string[];
-}) => {
+};
+
+export const joinGroupHandler = async (
+  { io, payload, socket }: SocketHandlerParams,
+  { groupIds }: JoinGroup
+) => {
   const isUserExistInGroup = await prisma.group.findFirst({
     where: {
       groupId: {
@@ -14,7 +17,7 @@ export const joinGroupHandler = async ({
       Chat: {
         participants: {
           some: {
-            userId: SOCKET_PAYLOAD.userId,
+            userId: payload.userId,
           },
         },
       },
@@ -22,6 +25,6 @@ export const joinGroupHandler = async ({
   });
 
   if (isUserExistInGroup) {
-    SOCKET.join(groupIds);
+    socket.join(groupIds);
   }
 };

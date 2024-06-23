@@ -1,6 +1,5 @@
 import { eventEmitter } from "../server";
 import { AppEvents, SocketEvents } from "../events";
-import { SOCKET_PAYLOAD, SOCKET } from "../utils/configureSocketIO";
 import { isNotTypingHandler } from "./handlers/is-not-typing";
 import { isOnlineHandler } from "./handlers/is-online";
 import { isTypingHandler } from "./handlers/is-typing";
@@ -12,31 +11,63 @@ import { deleteMsgHandler } from "./handlers/delete-msg";
 import { exitGroupHandler } from "./handlers/exit-group";
 import { groupCreatedHandler } from "./handlers/group-created";
 import { updateGroupDetailsHandler } from "./handlers/update-group-details";
+import { Server, Socket } from "socket.io";
+import { DecodedPayload } from "../types/DecodedPayload";
 
-export const socketHandler = () => {
-  console.log(`my username is ${SOCKET_PAYLOAD.username}`);
+export const socketHandler = (
+  socket: Socket,
+  io: Server,
+  payload: DecodedPayload
+) => {
+  console.log(`my username is ${payload.username}`);
 
-  SOCKET.on(SocketEvents.IS_ONLINE, isOnlineHandler);
+  const socketParams = {
+    socket,
+    io,
+    payload,
+  };
 
-  SOCKET.on(SocketEvents.IS_TYPING, isTypingHandler);
+  socket.on(SocketEvents.IS_ONLINE, (data) =>
+    isOnlineHandler(socketParams, data)
+  );
 
-  SOCKET.on(SocketEvents.IS_NOT_TYPING, isNotTypingHandler);
+  socket.on(SocketEvents.IS_TYPING, (data) =>
+    isTypingHandler(socketParams, data)
+  );
 
-  SOCKET.on(SocketEvents.SEND_PRIVATE_MESSAGE, sendPrivateMsgHandler);
+  socket.on(SocketEvents.IS_NOT_TYPING, (data) =>
+    isNotTypingHandler(socketParams, data)
+  );
 
-  SOCKET.on(SocketEvents.JOIN_GROUP, joinGroupHandler);
+  socket.on(SocketEvents.SEND_PRIVATE_MESSAGE, (data) =>
+    sendPrivateMsgHandler(socketParams, data)
+  );
 
-  SOCKET.on(SocketEvents.LEAVE_GROUP, leaveGroupHandler);
+  socket.on(SocketEvents.JOIN_GROUP, (data) =>
+    joinGroupHandler(socketParams, data)
+  );
 
-  SOCKET.on(SocketEvents.SEND_GROUP_MESSAGE, sendGroupMsgHandler);
+  socket.on(SocketEvents.LEAVE_GROUP, (data) =>
+    leaveGroupHandler(socketParams, data)
+  );
 
-  SOCKET.on(SocketEvents.DELETE_MESSAGE, deleteMsgHandler);
+  socket.on(SocketEvents.SEND_GROUP_MESSAGE, (data) =>
+    sendGroupMsgHandler(socketParams, data)
+  );
 
-  SOCKET.on(SocketEvents.EXIT_GROUP, exitGroupHandler);
+  socket.on(SocketEvents.DELETE_MESSAGE, (data) =>
+    deleteMsgHandler(socketParams, data)
+  );
 
-  eventEmitter.on(AppEvents.GROUP_CREATED, groupCreatedHandler);
+  socket.on(SocketEvents.EXIT_GROUP, (data) =>
+    exitGroupHandler(socketParams, data)
+  );
 
-  SOCKET.on(SocketEvents.UPDATE_GROUP_DETAILS, updateGroupDetailsHandler);
+  eventEmitter.on(AppEvents.GROUP_CREATED, (data) =>
+    groupCreatedHandler(socketParams, data)
+  );
 
- 
+  socket.on(SocketEvents.UPDATE_GROUP_DETAILS, (data) =>
+    updateGroupDetailsHandler(socketParams, data)
+  );
 };

@@ -1,8 +1,11 @@
 import { AppEvents } from "../../events";
 import { getDataFromRedis } from "../../redis";
-import { IO_SERVER } from "../../utils/configureSocketIO";
+import { SocketHandlerParams } from "../../types/common";
 
-export const groupCreatedHandler = async (users: string[]) => {
+export const groupCreatedHandler = async (
+  { io }: SocketHandlerParams,
+  users: string[]
+) => {
   let usersSocket: string[] = [];
   for (let i = 0; i < users.length; i++) {
     const socketId = await getDataFromRedis(`socket:${users[i]}`, true);
@@ -10,5 +13,5 @@ export const groupCreatedHandler = async (users: string[]) => {
       usersSocket.push(socketId);
     }
   }
-  IO_SERVER.to(usersSocket).emit(AppEvents.GROUP_CREATED);
+  io.to(usersSocket).emit(AppEvents.GROUP_CREATED);
 };

@@ -1,16 +1,23 @@
 import { SocketEvents } from "../../events";
 import { clearFromRedis } from "../../redis";
-import { IO_SERVER, SOCKET_PAYLOAD } from "../../utils/configureSocketIO";
+import { SocketHandlerParams } from "../../types/common";
 import { prisma } from "../../utils/prisma";
 
-export const exitGroupHandler = async ({ groupId }: { groupId: string }) => {
+type ExitGroup = {
+  groupId: string;
+};
+
+export const exitGroupHandler = async (
+  { io, payload, socket }: SocketHandlerParams,
+  { groupId }: ExitGroup
+) => {
   const group = await prisma.group.findUnique({
     where: {
       groupId,
       Chat: {
         participants: {
           some: {
-            userId: SOCKET_PAYLOAD.userId,
+            userId: payload.userId,
           },
         },
       },
@@ -26,7 +33,7 @@ export const exitGroupHandler = async ({ groupId }: { groupId: string }) => {
           },
           ChatKey: {
             where: {
-              userId: SOCKET_PAYLOAD.userId,
+              userId: payload.userId,
             },
             select: {
               id: true,
@@ -38,7 +45,7 @@ export const exitGroupHandler = async ({ groupId }: { groupId: string }) => {
   });
 
   const groupMembers = group?.Chat.participants;
-  const isExitByAdmin = group?.adminId === SOCKET_PAYLOAD.userId;
+  const isExitByAdmin = group?.adminId === payload.userId;
   const chatId = group?.chatId;
 
   await prisma.$transaction(
@@ -82,7 +89,7 @@ export const exitGroupHandler = async ({ groupId }: { groupId: string }) => {
             participants: {
               delete: {
                 participantId: groupMembers?.find(
-                  (item) => item.userId === SOCKET_PAYLOAD.userId
+                  (item) => item.userId === payload.userId
                 )?.participantId,
               },
             },
@@ -93,7 +100,7 @@ export const exitGroupHandler = async ({ groupId }: { groupId: string }) => {
             },
             messages: {
               deleteMany: {
-                senderId: SOCKET_PAYLOAD.userId,
+                senderId: payload.userId,
               },
             },
           },
@@ -127,21 +134,21 @@ export const exitGroupHandler = async ({ groupId }: { groupId: string }) => {
         ]
       : [
           clearFromRedis({
-            key: `chats:${SOCKET_PAYLOAD.userId}`,
+            key: `chats:${payload.userId}`,
           }),
           clearFromRedis({
             key: [
               `messages:${group?.chatId}`,
-              `group:${groupId}:${SOCKET_PAYLOAD.userId}`,
-              `chatKey:${SOCKET_PAYLOAD.userId}:${chatId}`,
+              `group:${groupId}:${payload.userId}`,
+              `chatKey:${payload.userId}:${chatId}`,
             ],
           }),
         ]
   );
 
-  IO_SERVER.to(groupId).emit(SocketEvents.EXIT_GROUP, {
+  io.to(groupId).emit(SocketEvents.EXIT_GROUP, {
     groupId,
     isExitByAdmin,
-    exitedUserId: SOCKET_PAYLOAD.userId,
+    exitedUserId: payload.userId,
   });
 };

@@ -1,6 +1,6 @@
 import { SocketEvents } from "../../events";
 import { clearFromRedis } from "../../redis";
-import { IO_SERVER, SOCKET_PAYLOAD } from "../../utils/configureSocketIO";
+import { SocketHandlerParams } from "../../types/common";
 import { prisma } from "../../utils/prisma";
 
 type UpdateGroupDetailsType = {
@@ -9,15 +9,14 @@ type UpdateGroupDetailsType = {
   description?: string;
 };
 
-export const updateGroupDetailsHandler = async ({
-  groupId,
-  name,
-  description,
-}: UpdateGroupDetailsType) => {
+export const updateGroupDetailsHandler = async (
+  { io, payload }: SocketHandlerParams,
+  { groupId, name, description }: UpdateGroupDetailsType
+) => {
   const group = await prisma.group.update({
     where: {
       groupId,
-      adminId: SOCKET_PAYLOAD.userId,
+      adminId: payload.userId,
     },
     data: {
       name,
@@ -51,7 +50,7 @@ export const updateGroupDetailsHandler = async ({
     }),
   ]);
 
-  IO_SERVER.to(groupId).emit(SocketEvents.UPDATE_GROUP_DETAILS, {
+  io.to(groupId).emit(SocketEvents.UPDATE_GROUP_DETAILS, {
     groupId,
     name: group.name,
     description: group.description,

@@ -1,10 +1,6 @@
 import { SocketEvents } from "../../events";
 import { clearFromRedis, getDataFromRedis } from "../../redis";
-import {
-  IO_SERVER,
-  SOCKET,
-  SOCKET_PAYLOAD,
-} from "../../utils/configureSocketIO";
+import { SocketHandlerParams } from "../../types/common";
 import { prisma } from "../../utils/prisma";
 
 type DeleteMsgType = {
@@ -14,12 +10,10 @@ type DeleteMsgType = {
   isGroup?: boolean;
 };
 
-export const deleteMsgHandler = async ({
-  messageId,
-  recipientId,
-  groupId,
-  isGroup,
-}: DeleteMsgType) => {
+export const deleteMsgHandler = async (
+  { io, payload, socket }: SocketHandlerParams,
+  { messageId, recipientId, groupId, isGroup }: DeleteMsgType
+) => {
   if ((isGroup && !groupId) || (!isGroup && !recipientId)) return;
 
   const msg = await prisma.message.findUnique({
@@ -42,7 +36,7 @@ export const deleteMsgHandler = async ({
     },
   });
 
-  if (msg?.senderId !== SOCKET_PAYLOAD.userId) return;
+  if (msg?.senderId !== payload.userId) return;
 
   await prisma.message.update({
     where: {
@@ -65,12 +59,13 @@ export const deleteMsgHandler = async ({
   ]);
 
   if (isGroup) {
-    IO_SERVER.to(groupId!).emit(SocketEvents.DELETE_MESSAGE, messageId);
+    io.to(groupId!).emit(SocketEvents.DELETE_MESSAGE, messageId);
   } else {
     const recipentSocketId = await getDataFromRedis(`socket:${recipientId}`);
 
-    IO_SERVER.to(
-      recipentSocketId ? [recipentSocketId, SOCKET.id] : [SOCKET.id]
-    ).emit(SocketEvents.DELETE_MESSAGE, messageId);
+    io.to(recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]).emit(
+      SocketEvents.DELETE_MESSAGE,
+      messageId
+    );
   }
 };

@@ -1,12 +1,15 @@
 import { SocketEvents } from "../../events";
 import { getDataFromRedis } from "../../redis";
-import { SOCKET } from "../../utils/configureSocketIO";
+import { SocketHandlerParams } from "../../types/common";
 
-export const isOnlineHandler = async (userId: string) => {
+export const isOnlineHandler = async (
+  { socket, io, payload }: SocketHandlerParams,
+  userId: string
+) => {
   const socketId = await getDataFromRedis(`socket:${userId}`, true);
   if (socketId) {
-    SOCKET.emit(SocketEvents.IS_ONLINE, "online");
+    socket.emit(SocketEvents.IS_ONLINE, "online");
   } else {
-    SOCKET.emit(SocketEvents.IS_ONLINE, "offline");
+    socket.emit(SocketEvents.IS_ONLINE, "offline");
   }
 };
