@@ -56,8 +56,8 @@ export const sendGroupMsgHandler = async (
     data: {
       chatId: isUserExistInGroup.chatId,
       contentType,
-content: !IS_IMAGE_OR_AUDIO ? content ?? null : null,
-mediaPath: IS_IMAGE_OR_AUDIO ? mediaPath ?? null : null,
+      content: !IS_IMAGE_OR_AUDIO ? content : null,
+      mediaPath: IS_IMAGE_OR_AUDIO ? mediaPath : null,
       createdAt: new Date(),
       senderId: payload.userId,
     },

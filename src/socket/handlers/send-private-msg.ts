@@ -49,11 +49,11 @@ export const sendPrivateMsgHandler = async (
     }));
 
   if (isAlreadyChatExist) {
-   
+
     const msg = await prisma.message.create({
       data: {
-        content: !IS_IMAGE_OR_AUDIO ? content ?? null : null,
-mediaPath: IS_IMAGE_OR_AUDIO ? mediaPath ?? null : null,
+        content: !IS_IMAGE_OR_AUDIO ? content  : null,
+        mediaPath: IS_IMAGE_OR_AUDIO ? mediaPath  : null,
         createdAt: new Date(),
         chatId: isAlreadyChatExist.chatId,
         senderId: payload.userId,
