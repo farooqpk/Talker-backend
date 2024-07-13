@@ -48,6 +48,12 @@ export const groupDetails = async (req: Request, res: Response) => {
       },
     });
 
+    if (!group) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Group not found" });
+    }
+
     await setDataInRedis({
       key: `group:${groupId}:${req.userId}`,
       data: group,

@@ -13,6 +13,7 @@ import { groupCreatedHandler } from "./handlers/group-created";
 import { updateGroupDetailsHandler } from "./handlers/update-group-details";
 import { Server, Socket } from "socket.io";
 import { DecodedPayload } from "../types/DecodedPayload";
+import { KickMemberFromGroupHandler } from "./handlers/kick-member-from-group";
 
 export const socketHandler = (
   socket: Socket,
@@ -70,4 +71,8 @@ export const socketHandler = (
   socket.on(SocketEvents.UPDATE_GROUP_DETAILS, (data) =>
     updateGroupDetailsHandler(socketParams, data)
   );
+
+  socket.on(SocketEvents.KICK_MEMBER, (data) =>
+    KickMemberFromGroupHandler(socketParams, data)
+  )
 };

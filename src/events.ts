@@ -13,7 +13,8 @@ export enum SocketEvents {
   IS_CONNECTED = 'isConnected',
   IS_DISCONNECTED = 'isDisconnected',
   UN_AUTHORIZED = 'unauthorized',
-  DISCONNECT='disconnect',
+  DISCONNECT = 'disconnect',
+  KICK_MEMBER = "kickMember",
 }
 
 export enum AppEvents {
