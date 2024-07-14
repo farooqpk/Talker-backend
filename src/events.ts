@@ -15,6 +15,7 @@ export enum SocketEvents {
   UN_AUTHORIZED = 'unauthorized',
   DISCONNECT = 'disconnect',
   KICK_MEMBER = "kickMember",
+  ADD_NEW_MEMBER_TO_GROUP = "addNewMemberToGroup",
 }
 
 export enum AppEvents {

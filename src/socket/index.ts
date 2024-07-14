@@ -14,6 +14,7 @@ import { updateGroupDetailsHandler } from "./handlers/update-group-details";
 import { Server, Socket } from "socket.io";
 import { DecodedPayload } from "../types/DecodedPayload";
 import { KickMemberFromGroupHandler } from "./handlers/kick-member-from-group";
+import { addNewMembersToGroupHandler } from "./handlers/add-new-members-to-group";
 
 export const socketHandler = (
   socket: Socket,
@@ -74,5 +75,9 @@ export const socketHandler = (
 
   socket.on(SocketEvents.KICK_MEMBER, (data) =>
     KickMemberFromGroupHandler(socketParams, data)
+  )
+
+  socket.on(SocketEvents.ADD_NEW_MEMBER_TO_GROUP, (data) =>
+    addNewMembersToGroupHandler(socketParams, data)
   )
 };
