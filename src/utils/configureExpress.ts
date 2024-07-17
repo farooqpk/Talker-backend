@@ -14,14 +14,6 @@ export function configureExpress(app: express.Express) {
   app.use(cors({
     origin: CLIENT_URL, 
     credentials: true, 
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Requested-With',
-      'Accept',
-      'Origin'
-    ], 
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
   }));
   app.use(express.json());
   app.use(cookieParser());

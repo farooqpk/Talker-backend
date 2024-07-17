@@ -1,9 +1,9 @@
 import express, { Express } from "express";
 import dotenv from "dotenv";
-import http from "http";
+import http from "node:http";
 import { Server } from "socket.io";
 import { connectPrisma } from "./utils/prisma";
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import { connectToRedis } from "./utils/redis";
 import { configureExpress } from "./utils/configureExpress";
 import { configureSocketIO } from "./utils/configureSocketIO";
