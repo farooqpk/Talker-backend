@@ -16,6 +16,7 @@ export enum SocketEvents {
   DISCONNECT = 'disconnect',
   KICK_MEMBER = "kickMember",
   ADD_NEW_MEMBER_TO_GROUP = "addNewMemberToGroup",
+  READ_MESSAGE = "readMessage",
 }
 
 export enum AppEvents {

@@ -5,90 +5,105 @@ import { SocketEvents } from "../../events";
 import type { SocketHandlerParams } from "../../types/common";
 
 type GroupMsgType = {
-	groupId: string;
-	message: {
-		content?: string;
-		contentType: ContentType;
-		mediaPath?: string;
-	};
+  groupId: string;
+  message: {
+    content?: string;
+    contentType: ContentType;
+    mediaPath?: string;
+  };
 };
 
 export const sendGroupMsgHandler = async (
-	{ io, payload }: SocketHandlerParams,
-	{ groupId, message }: GroupMsgType,
+  { io, payload }: SocketHandlerParams,
+  { groupId, message }: GroupMsgType
 ) => {
-	const { content, contentType, mediaPath } = message;
+  const { content, contentType, mediaPath } = message;
 
-	const IS_IMAGE_OR_AUDIO =
-		contentType === ContentType.IMAGE || contentType === ContentType.AUDIO;
+  const IS_IMAGE_OR_AUDIO =
+    contentType === ContentType.IMAGE || contentType === ContentType.AUDIO;
 
-	if ((!IS_IMAGE_OR_AUDIO && !content) || (IS_IMAGE_OR_AUDIO && !mediaPath)) {
-		return;
-	}
+  if ((!IS_IMAGE_OR_AUDIO && !content) || (IS_IMAGE_OR_AUDIO && !mediaPath)) {
+    return;
+  }
 
-	const isUserExistInGroup = await prisma.group.findFirst({
-		where: {
-			groupId,
-			Chat: {
-				participants: {
-					some: {
-						userId: payload.userId,
-					},
-				},
-			},
-		},
-		select: {
-			chatId: true,
-			Chat: {
-				select: {
-					participants: {
-						select: {
-							userId: true,
-						},
-					},
-				},
-			},
-		},
-	});
-	if (!isUserExistInGroup) return;
+  const isUserExistInGroup = await prisma.group.findFirst({
+    where: {
+      groupId,
+      Chat: {
+        participants: {
+          some: {
+            userId: payload.userId,
+          },
+        },
+      },
+    },
+    select: {
+      chatId: true,
+      Chat: {
+        select: {
+          participants: {
+            select: {
+              userId: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!isUserExistInGroup) return;
 
-	const msg = await prisma.message.create({
-		data: {
-			chatId: isUserExistInGroup.chatId,
-			contentType,
-			content: !IS_IMAGE_OR_AUDIO ? content : null,
-			mediaPath: IS_IMAGE_OR_AUDIO ? mediaPath : null,
-			createdAt: new Date(),
-			senderId: payload.userId,
-		},
-		include: {
-			sender: {
-				select: {
-					userId: true,
-					username: true,
-				},
-			},
-		},
-	});
+  const msg = await prisma.message.create({
+    data: {
+      chatId: isUserExistInGroup.chatId,
+      contentType,
+      content: !IS_IMAGE_OR_AUDIO ? content : null,
+      mediaPath: IS_IMAGE_OR_AUDIO ? mediaPath : null,
+      createdAt: new Date(),
+      senderId: payload.userId,
+    },
+    include: {
+      sender: {
+        select: {
+          userId: true,
+          username: true,
+        },
+      },
+    },
+  });
 
-	const groupMembers = isUserExistInGroup.Chat.participants;
+  const groupMembers = isUserExistInGroup.Chat.participants;
+  const groupMembersWithoutSender = groupMembers.filter(
+    ({ userId }) => userId !== payload.userId
+  );
 
-	await prisma.messageStatus.createMany({
-		data: groupMembers.map(({ userId }) => ({
-			messageId: msg.messageId,
-			userId,
-		})),
-	});
+  await prisma.messageStatus.createMany({
+    data: groupMembersWithoutSender.map(({ userId }) => ({
+      messageId: msg.messageId,
+      userId,
+    })),
+  });
 
-	// clear the message cache
-	await Promise.all([
-		clearFromRedis({
-			key: `messages:${isUserExistInGroup.chatId}`,
-		}),
-		clearFromRedis({
-			key: groupMembers.map((item) => `chats:${item.userId}`),
-		}),
-	]);
+  const msgStatus = await prisma.messageStatus.findMany({
+    where: {
+      messageId: msg.messageId,
+    },
+    select: {
+      userId: true,
+      isRead: true,
+    },
+  });
 
-	io.to(groupId).emit(SocketEvents.SEND_GROUP_MESSAGE, { message: msg });
+  // clear the message cache
+  await Promise.all([
+    clearFromRedis({
+      key: `messages:${isUserExistInGroup.chatId}`,
+    }),
+    clearFromRedis({
+      key: groupMembers.map((item) => `chats:${item.userId}`),
+    }),
+  ]);
+
+  io.to(groupId).emit(SocketEvents.SEND_GROUP_MESSAGE, {
+    message: { ...msg, status: msgStatus },
+  });
 };
