@@ -59,15 +59,30 @@ export const groupDetails = async (req: Request, res: Response) => {
         .json({ success: false, message: "Group not found" });
     }
 
+    const transformData = {
+      groupId: group.groupId,
+      chatId: group.Chat.chatId,
+      name: group.name,
+      description: group.description,
+      createdAt: group.createdAt.toISOString(),
+      Chat: {
+        participants: group.Chat.participants.map(({ user }) => user),
+        encryptedKeys: group.Chat.ChatKey.map(
+          ({ encryptedKey }) => encryptedKey
+        ),
+      },
+      admins: group.GroupAdmin.map(({ adminId }) => adminId),
+    };
+
     await setDataInRedis({
       key: `group:${groupId}:${req.userId}`,
-      data: group,
+      data: transformData,
       expirationTimeInSeconds: 12 * 60 * 60,
     });
 
-    return res.json(group);
+    return res.status(200).json(transformData);
   } catch (error) {
-    return res.json({
+    return res.status(500).json({
       success: false,
       message: "There is an error while fetching group details",
     });
