@@ -1,4 +1,4 @@
-import type{ Request, Response } from "express";
+import type { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
 import { getDataFromRedis, setDataInRedis } from "../../redis/index";
 
@@ -43,6 +43,11 @@ export const groupDetails = async (req: Request, res: Response) => {
                 encryptedKey: true,
               },
             },
+          },
+        },
+        GroupAdmin: {
+          select: {
+            adminId: true,
           },
         },
       },

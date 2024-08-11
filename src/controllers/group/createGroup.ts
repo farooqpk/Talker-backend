@@ -25,7 +25,12 @@ export const createGroup = async (req: Request, res: Response) => {
             name: groupName,
             description,
             createdAt: new Date(),
-            adminId: req.userId,
+            GroupAdmin: {
+              create: {
+                adminId: req.userId,
+                createdAt: new Date(),
+              },
+            },
           },
         },
         participants: {

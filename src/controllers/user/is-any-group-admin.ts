@@ -5,7 +5,11 @@ export const isAnyGroupAdmin = async (req: Request, res: Response) => {
   try {
     const groups = await prisma.group.findMany({
       where: {
-        adminId: req.userId,
+        GroupAdmin: {
+          some: {
+            adminId: req.userId,
+          },
+        },
       },
     });
 
