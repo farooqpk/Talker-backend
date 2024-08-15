@@ -67,9 +67,9 @@ export const groupDetails = async (req: Request, res: Response) => {
       createdAt: group.createdAt.toISOString(),
       Chat: {
         participants: group.Chat.participants.map(({ user }) => user),
-        encryptedKeys: group.Chat.ChatKey.map(
-          ({ encryptedKey }) => encryptedKey
-        ),
+        encryptedKey: group.Chat.ChatKey.map(
+          ({ encryptedKey }) => encryptedKey 
+        )[0],
       },
       admins: group.GroupAdmin.map(({ adminId }) => adminId),
     };
