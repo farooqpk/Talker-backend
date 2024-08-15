@@ -15,7 +15,8 @@ import { Server, Socket } from "socket.io";
 import { DecodedPayload } from "../types/DecodedPayload";
 import { KickMemberFromGroupHandler } from "./handlers/kick-member-from-group";
 import { addNewMembersToGroupHandler } from "./handlers/add-new-members-to-group";
-import {readMessageStatusHandler } from "./handlers/read-msg-status";
+import { readMessageStatusHandler } from "./handlers/read-msg-status";
+import { setAsAdminHandler } from "./handlers/set-as-admin";
 
 export const socketHandler = (
   socket: Socket,
@@ -84,5 +85,9 @@ export const socketHandler = (
 
   socket.on(SocketEvents.READ_MESSAGE, (data) =>
     readMessageStatusHandler(socketParams, data)
+  );
+
+  socket.on(SocketEvents.SET_ADMIN, (data) =>
+    setAsAdminHandler(socketParams, data)
   );
 };

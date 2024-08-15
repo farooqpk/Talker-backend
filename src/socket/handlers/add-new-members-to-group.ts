@@ -63,8 +63,9 @@ export const addNewMembersToGroupHandler = async (
   // clear all the members chat cache
   await Promise.all(
     allMembers.map(({ userId }) => {
-      clearFromRedis({ key: `chats:${userId}` });
-      clearFromRedis({ key: `group:${groupId}:${userId}` });
+      clearFromRedis({
+        key: [`chats:${userId}`, `group:${groupId}:${userId}`],
+      });
     })
   );
 

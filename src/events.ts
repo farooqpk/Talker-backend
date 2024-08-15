@@ -9,14 +9,16 @@ export enum SocketEvents {
   DELETE_MESSAGE = "deleteMessage",
   EXIT_GROUP = "exitGroup",
   UPDATE_GROUP_DETAILS = "updateGroupDetails",
-  CONNECTION = 'connection',
-  IS_CONNECTED = 'isConnected',
-  IS_DISCONNECTED = 'isDisconnected',
-  UN_AUTHORIZED = 'unauthorized',
-  DISCONNECT = 'disconnect',
+  CONNECTION = "connection",
+  IS_CONNECTED = "isConnected",
+  IS_DISCONNECTED = "isDisconnected",
+  UN_AUTHORIZED = "unauthorized",
+  DISCONNECT = "disconnect",
   KICK_MEMBER = "kickMember",
   ADD_NEW_MEMBER_TO_GROUP = "addNewMemberToGroup",
   READ_MESSAGE = "readMessage",
+  SET_ADMIN = "setAdmin",
+  ERROR = "error",
 }
 
 export enum AppEvents {
