@@ -48,6 +48,7 @@ export const groupDetails = async (req: Request, res: Response) => {
         GroupAdmin: {
           select: {
             adminId: true,
+            isPrimaryAdmin: true,
           },
         },
       },
@@ -65,13 +66,13 @@ export const groupDetails = async (req: Request, res: Response) => {
       name: group.name,
       description: group.description,
       createdAt: group.createdAt.toISOString(),
-      Chat: {
+      chat: {
         participants: group.Chat.participants.map(({ user }) => user),
         encryptedKey: group.Chat.ChatKey.map(
           ({ encryptedKey }) => encryptedKey 
         )[0],
       },
-      admins: group.GroupAdmin.map(({ adminId }) => adminId),
+      admins: group.GroupAdmin.map((admin) => admin),
     };
 
     await setDataInRedis({

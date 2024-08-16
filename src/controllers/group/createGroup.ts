@@ -29,6 +29,7 @@ export const createGroup = async (req: Request, res: Response) => {
               create: {
                 adminId: req.userId,
                 createdAt: new Date(),
+                isPrimaryAdmin: true,
               },
             },
           },

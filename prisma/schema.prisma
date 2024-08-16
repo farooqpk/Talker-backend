@@ -64,24 +64,25 @@ model Participants {
 }
 
 model Group {
-  groupId     String   @id @default(auto()) @map("_id") @db.ObjectId
-  chatId      String   @db.ObjectId
+  groupId     String       @id @default(auto()) @map("_id") @db.ObjectId
+  chatId      String       @db.ObjectId
   name        String
   description String
   createdAt   DateTime
-  Chat        Chat     @relation(fields: [chatId], references: [chatId])
+  Chat        Chat         @relation(fields: [chatId], references: [chatId])
   GroupAdmin  GroupAdmin[]
 }
 
-
 model GroupAdmin {
-  id        String @id @default(auto()) @map("_id") @db.ObjectId
-  adminId     String   @db.ObjectId
-  groupId     String   @db.ObjectId
-  createdAt   DateTime @db.Timestamp
-  admin       User     @relation(fields: [adminId], references: [userId])
-  group       Group    @relation(fields: [groupId], references: [groupId])
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  adminId        String   @db.ObjectId
+  groupId        String   @db.ObjectId
+  isPrimaryAdmin Boolean  @default(false)
+  createdAt      DateTime @db.Timestamp
+  admin          User     @relation(fields: [adminId], references: [userId])
+  group          Group    @relation(fields: [groupId], references: [groupId])
 }
+
 model ChatKey {
   id           String @id @default(auto()) @map("_id") @db.ObjectId
   chatId       String @db.ObjectId
