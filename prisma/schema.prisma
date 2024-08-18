@@ -77,7 +77,6 @@ model GroupAdmin {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   adminId        String   @db.ObjectId
   groupId        String   @db.ObjectId
-  isPrimaryAdmin Boolean  @default(false)
   createdAt      DateTime @db.Timestamp
   admin          User     @relation(fields: [adminId], references: [userId])
   group          Group    @relation(fields: [groupId], references: [groupId])
