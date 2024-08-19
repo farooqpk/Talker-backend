@@ -22,9 +22,10 @@ export const exitGroupHandler = async (
         },
       },
     },
-    include: {
+    select: {
+      chatId: true,
       Chat: {
-        include: {
+        select: {
           participants: {
             select: {
               participantId: true,
@@ -50,110 +51,57 @@ export const exitGroupHandler = async (
   });
 
   const groupMembers = group?.Chat.participants;
-  const isExitByAdmin = group?.GroupAdmin?.includes({
-    adminId: payload.userId,
-  });
   const chatId = group?.chatId;
-
-  await prisma.$transaction(
-    async (transactionPrisma) => {
-      if (isExitByAdmin) {
-        // if admin then delete group
-        await Promise.all([
-          transactionPrisma.chatKey.deleteMany({
-            where: {
-              chatId,
-            },
-          }),
-          transactionPrisma.group.delete({
-            where: {
-              groupId,
-            },
-          }),
-          transactionPrisma.participants.deleteMany({
-            where: {
-              chatId,
-            },
-          }),
-          transactionPrisma.message.deleteMany({
-            where: {
-              chatId,
-            },
-          }),
-          transactionPrisma.chat.delete({
-            where: {
-              chatId,
-            },
-          }),
-        ]);
-      } else {
-        // if not admin exit the group
-        await transactionPrisma.chat.update({
-          where: {
-            chatId,
-          },
-          data: {
-            participants: {
-              delete: {
-                participantId: groupMembers?.find(
-                  (item) => item.userId === payload.userId
-                )?.participantId,
-              },
-            },
-            ChatKey: {
-              delete: {
-                id: group?.Chat.ChatKey[0].id,
-              },
-            },
-            messages: {
-              deleteMany: {
-                senderId: payload.userId,
-              },
-            },
-          },
-        });
-      }
-    },
-    {
-      maxWait: 10000,
-      timeout: 5000,
-    }
+  const participantId = groupMembers?.find(
+    (item) => item.userId === payload.userId
+  )?.participantId;
+  const isExitByAdmin = group?.GroupAdmin.some(
+    ({ adminId }) => adminId === payload.userId
   );
+  const adminsLength = group?.GroupAdmin?.length;
+
+  // if the user is the admin and there is only one admin in the group
+  if (isExitByAdmin && adminsLength === 1) {
+    return;
+  }
+
+  await prisma.chat.update({
+    where: {
+      chatId,
+    },
+    data: {
+      participants: {
+        delete: {
+          participantId,
+        },
+      },
+      ChatKey: {
+        delete: {
+          id: group?.Chat.ChatKey[0].id,
+        },
+      },
+      messages: {
+        deleteMany: {
+          senderId: payload.userId,
+        },
+      },
+    },
+  });
 
   // clear the caches
-  await Promise.all(
-    isExitByAdmin
-      ? [
-          clearFromRedis({
-            key: `messages:${group?.chatId}`,
-          }),
-          clearFromRedis({
-            key: groupMembers?.map((item) => `chats:${item.userId}`),
-          }),
-          clearFromRedis({
-            key: groupMembers?.map(
-              (item) => `chatKey:${item.userId}:${chatId}`
-            ),
-          }),
-          clearFromRedis({
-            key: groupMembers?.map((item) => `group:${groupId}:${item.userId}`),
-          }),
-        ]
-      : [
-          clearFromRedis({
-            key: [
-              `messages:${group?.chatId}`,
-              `group:${groupId}:${payload.userId}`,
-              `chatKey:${payload.userId}:${chatId}`,
-              `chats:${payload.userId}`,
-            ],
-          }),
-        ]
-  );
+  await Promise.all([
+    clearFromRedis({
+      key: [
+        `messages:${group?.chatId}`,
+        `group:${groupId}:${payload.userId}`,
+        `chatKey:${payload.userId}:${chatId}`,
+        `chats:${payload.userId}`,
+      ],
+    }),
+  ]);
 
   io.to(groupId).emit(SocketEvents.EXIT_GROUP, {
     groupId,
-    isExitByAdmin,
     exitedUserId: payload.userId,
   });
 };
