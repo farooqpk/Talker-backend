@@ -65,27 +65,52 @@ export const exitGroupHandler = async (
     return;
   }
 
-  await prisma.chat.update({
-    where: {
-      chatId,
-    },
-    data: {
-      participants: {
-        delete: {
-          participantId,
+  await prisma.$transaction(async (tx) => {
+    const messages = await tx.message.findMany({
+      where: {
+        senderId: payload.userId,
+        chatId,
+      },
+      select: {
+        messageId: true,
+      },
+    });
+
+    const messageIds = messages.map((m) => m.messageId);
+
+    await tx.messageStatus.deleteMany({
+      where: {
+        messageId: {
+          in: messageIds,
         },
       },
-      ChatKey: {
-        delete: {
-          id: group?.Chat.ChatKey[0].id,
+    });
+
+    await tx.message.deleteMany({
+      where: {
+        messageId: {
+          in: messageIds,
         },
       },
-      messages: {
-        deleteMany: {
-          senderId: payload.userId,
+    });
+
+    await tx.chat.update({
+      where: {
+        chatId,
+      },
+      data: {
+        participants: {
+          delete: {
+            participantId,
+          },
+        },
+        ChatKey: {
+          delete: {
+            id: group?.Chat.ChatKey[0].id,
+          },
         },
       },
-    },
+    });
   });
 
   // clear the caches
@@ -93,10 +118,12 @@ export const exitGroupHandler = async (
     clearFromRedis({
       key: [
         `messages:${group?.chatId}`,
-        `group:${groupId}:${payload.userId}`,
         `chatKey:${payload.userId}:${chatId}`,
         `chats:${payload.userId}`,
       ],
+    }),
+    clearFromRedis({
+      key: groupMembers?.map((item) => `group:${groupId}:${item.userId}`),
     }),
   ]);
 
