@@ -18,7 +18,7 @@ model User {
   createdAt     DateTime
   messagesSent  Message[]       @relation("SentMessages")
   participants  Participants[]
-  Group         Group[]
+  GroupAdmin    GroupAdmin[]
   ChatKey       ChatKey[]
   messageStatus MessageStatus[]
 }
@@ -64,15 +64,22 @@ model Participants {
 }
 
 model Group {
-  groupId     String   @id @default(auto()) @map("_id") @db.ObjectId
-  chatId      String   @db.ObjectId
+  groupId     String       @id @default(auto()) @map("_id") @db.ObjectId
+  chatId      String       @db.ObjectId
   name        String
   description String
   createdAt   DateTime
-  adminId     String   @db.ObjectId
-  // Relationships
-  Chat        Chat     @relation(fields: [chatId], references: [chatId])
-  admin       User     @relation(fields: [adminId], references: [userId])
+  Chat        Chat         @relation(fields: [chatId], references: [chatId])
+  GroupAdmin  GroupAdmin[]
+}
+
+model GroupAdmin {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  adminId        String   @db.ObjectId
+  groupId        String   @db.ObjectId
+  createdAt      DateTime @db.Timestamp
+  admin          User     @relation(fields: [adminId], references: [userId])
+  group          Group    @relation(fields: [groupId], references: [groupId])
 }
 
 model ChatKey {

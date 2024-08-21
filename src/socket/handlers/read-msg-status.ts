@@ -7,7 +7,7 @@ type ReadMessageStatus = {
   messageId: string;
 };
 
-export const readMessageStatusGroupHandler = async (
+export const readMessageStatusHandler = async (
   { socket, payload, io }: SocketHandlerParams,
   { messageId }: ReadMessageStatus
 ) => {
@@ -81,7 +81,6 @@ export const readMessageStatusGroupHandler = async (
 
     io.to(recipentSocketId ? [recipentSocketId, socket.id] : socket.id).emit(
       SocketEvents.READ_MESSAGE,
-
       messageId
     );
   }

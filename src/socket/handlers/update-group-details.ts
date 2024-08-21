@@ -16,7 +16,11 @@ export const updateGroupDetailsHandler = async (
   const group = await prisma.group.update({
     where: {
       groupId,
-      adminId: payload.userId,
+      GroupAdmin: {
+        some: {
+          adminId: payload.userId,
+        },
+      },
     },
     data: {
       name,

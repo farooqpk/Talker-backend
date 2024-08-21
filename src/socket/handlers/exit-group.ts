@@ -4,149 +4,131 @@ import { SocketHandlerParams } from "../../types/common";
 import { prisma } from "../../utils/prisma";
 
 type ExitGroup = {
-	groupId: string;
+  groupId: string;
 };
 
 export const exitGroupHandler = async (
-	{ io, payload, socket }: SocketHandlerParams,
-	{ groupId }: ExitGroup,
+  { io, payload, socket }: SocketHandlerParams,
+  { groupId }: ExitGroup
 ) => {
-	const group = await prisma.group.findUnique({
-		where: {
-			groupId,
-			Chat: {
-				participants: {
-					some: {
-						userId: payload.userId,
-					},
-				},
-			},
-		},
-		include: {
-			Chat: {
-				include: {
-					participants: {
-						select: {
-							participantId: true,
-							userId: true,
-						},
-					},
-					ChatKey: {
-						where: {
-							userId: payload.userId,
-						},
-						select: {
-							id: true,
-						},
-					},
-				},
-			},
-		},
-	});
+  const group = await prisma.group.findUnique({
+    where: {
+      groupId,
+      Chat: {
+        participants: {
+          some: {
+            userId: payload.userId,
+          },
+        },
+      },
+    },
+    select: {
+      chatId: true,
+      Chat: {
+        select: {
+          participants: {
+            select: {
+              participantId: true,
+              userId: true,
+            },
+          },
+          ChatKey: {
+            where: {
+              userId: payload.userId,
+            },
+            select: {
+              id: true,
+            },
+          },
+        },
+      },
+      GroupAdmin: {
+        select: {
+          adminId: true,
+        },
+      },
+    },
+  });
 
-	const groupMembers = group?.Chat.participants;
-	const isExitByAdmin = group?.adminId === payload.userId;
-	const chatId = group?.chatId;
+  const groupMembers = group?.Chat.participants;
+  const chatId = group?.chatId;
+  const participantId = groupMembers?.find(
+    (item) => item.userId === payload.userId
+  )?.participantId;
+  const isExitByAdmin = group?.GroupAdmin.some(
+    ({ adminId }) => adminId === payload.userId
+  );
+  const adminsLength = group?.GroupAdmin?.length;
 
-	await prisma.$transaction(
-		async (transactionPrisma) => {
-			if (isExitByAdmin) {
-				// if admin then delete group
-				await Promise.all([
-					transactionPrisma.chatKey.deleteMany({
-						where: {
-							chatId,
-						},
-					}),
-					transactionPrisma.group.delete({
-						where: {
-							groupId,
-						},
-					}),
-					transactionPrisma.participants.deleteMany({
-						where: {
-							chatId,
-						},
-					}),
-					transactionPrisma.message.deleteMany({
-						where: {
-							chatId,
-						},
-					}),
-					transactionPrisma.chat.delete({
-						where: {
-							chatId,
-						},
-					}),
-				]);
-			} else {
-				// if not admin exit the group
-				await transactionPrisma.chat.update({
-					where: {
-						chatId,
-					},
-					data: {
-						participants: {
-							delete: {
-								participantId: groupMembers?.find(
-									(item) => item.userId === payload.userId,
-								)?.participantId,
-							},
-						},
-						ChatKey: {
-							delete: {
-								id: group?.Chat.ChatKey[0].id,
-							},
-						},
-						messages: {
-							deleteMany: {
-								senderId: payload.userId,
-							},
-						},
-					},
-				});
-			}
-		},
-		{
-			maxWait: 10000,
-			timeout: 5000,
-		},
-	);
+  // if the user is the admin and there is only one admin in the group
+  if (isExitByAdmin && adminsLength === 1) {
+    return;
+  }
 
-	// clear the caches
-	await Promise.all(
-		isExitByAdmin
-			? [
-					clearFromRedis({
-						key: `messages:${group?.chatId}`,
-					}),
-					clearFromRedis({
-						key: groupMembers?.map((item) => `chats:${item.userId}`),
-					}),
-					clearFromRedis({
-						key: groupMembers?.map(
-							(item) => `chatKey:${item.userId}:${chatId}`,
-						),
-					}),
-					clearFromRedis({
-						key: groupMembers?.map((item) => `group:${groupId}:${item.userId}`),
-					}),
-				]
-			: [
-					clearFromRedis({
-						key: [
-							`messages:${group?.chatId}`,
-							`group:${groupId}:${payload.userId}`,
-							`chatKey:${payload.userId}:${chatId}`,
-							`chats:${payload.userId}`,
-						],
-					}),
-				],
-	);
+  await prisma.$transaction(async (tx) => {
+    const messages = await tx.message.findMany({
+      where: {
+        senderId: payload.userId,
+        chatId,
+      },
+      select: {
+        messageId: true,
+      },
+    });
 
-	io.to(groupId).emit(SocketEvents.EXIT_GROUP, {
-		groupId,
-		isExitByAdmin,
-		exitedUserId: payload.userId,
-	});
+    const messageIds = messages.map((m) => m.messageId);
+
+    await tx.messageStatus.deleteMany({
+      where: {
+        messageId: {
+          in: messageIds,
+        },
+      },
+    });
+
+    await tx.message.deleteMany({
+      where: {
+        messageId: {
+          in: messageIds,
+        },
+      },
+    });
+
+    await tx.chat.update({
+      where: {
+        chatId,
+      },
+      data: {
+        participants: {
+          delete: {
+            participantId,
+          },
+        },
+        ChatKey: {
+          delete: {
+            id: group?.Chat.ChatKey[0].id,
+          },
+        },
+      },
+    });
+  });
+
+  // clear the caches
+  await Promise.all([
+    clearFromRedis({
+      key: [
+        `messages:${group?.chatId}`,
+        `chatKey:${payload.userId}:${chatId}`,
+        `chats:${payload.userId}`,
+      ],
+    }),
+    clearFromRedis({
+      key: groupMembers?.map((item) => `group:${groupId}:${item.userId}`),
+    }),
+  ]);
+
+  io.to(groupId).emit(SocketEvents.EXIT_GROUP, {
+    groupId,
+    exitedUserId: payload.userId,
+  });
 };

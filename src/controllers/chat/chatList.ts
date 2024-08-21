@@ -29,11 +29,11 @@ export const chatList = async (req: Request, res: Response) => {
             senderId: true,
             contentType: true,
             isDeleted: true,
-            sender:{
-              select:{
-                username: true
-              }
-            }
+            sender: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
         participants: {
@@ -47,6 +47,11 @@ export const chatList = async (req: Request, res: Response) => {
             groupId: true,
             name: true,
             description: true,
+            GroupAdmin: {
+              select: {
+                adminId: true,
+              },
+            },
           },
         },
         ChatKey: {
@@ -60,20 +65,41 @@ export const chatList = async (req: Request, res: Response) => {
       },
     });
 
+    const transofrmedChats = chats?.map(
+      ({ ChatKey, Group, messages, participants, ...rest }) => {
+        const encryptedKey = ChatKey[0]?.encryptedKey;
+        const recipient = participants?.[0]?.user;
+        const group = Group?.[0];
+        const message = messages[0];
+        return {
+          ...rest,
+          recipient,
+          encryptedKey,
+          group,
+          message,
+        };
+      }
+    );
+
     // sort based on last message
-    chats.sort((a: any, b: any) => {
-      return (
-        b?.messages?.[0]?.createdAt - a?.messages?.[0]?.createdAt ||
-        b.createdAt - a.createdAt
-      );
+    transofrmedChats.sort((a, b) => {
+      const bCreatedAt =
+        b?.message?.createdAt instanceof Date
+          ? b.message.createdAt.getTime()
+          : 0;
+      const aCreatedAt =
+        a?.message?.createdAt instanceof Date
+          ? a.message?.createdAt.getTime()
+          : 0;
+      return bCreatedAt - aCreatedAt;
     });
 
     await setDataInRedis({
       key: `chats:${req.userId}`,
-      data: chats,
+      data: transofrmedChats,
       expirationTimeInSeconds: 4 * 60 * 60,
     });
-    res.status(200).json(chats);
+    res.status(200).json(transofrmedChats);
   } catch (error) {
     res.status(500).json({
       success: false,
