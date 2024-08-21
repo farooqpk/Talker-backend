@@ -19,6 +19,7 @@ export enum SocketEvents {
   READ_MESSAGE = "readMessage",
   SET_ADMIN = "setAdmin",
   ERROR = "error",
+  DELETE_GROUP = "deleteGroup",
 }
 
 export enum AppEvents {

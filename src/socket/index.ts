@@ -17,6 +17,7 @@ import { KickMemberFromGroupHandler } from "./handlers/kick-member-from-group";
 import { addNewMembersToGroupHandler } from "./handlers/add-new-members-to-group";
 import { readMessageStatusHandler } from "./handlers/read-msg-status";
 import { setAsAdminHandler } from "./handlers/set-as-admin";
+import { deleteGroupHandler } from "./handlers/delete-group";
 
 export const socketHandler = (
   socket: Socket,
@@ -89,5 +90,9 @@ export const socketHandler = (
 
   socket.on(SocketEvents.SET_ADMIN, (data) =>
     setAsAdminHandler(socketParams, data)
+  );
+
+  socket.on(SocketEvents.DELETE_GROUP, (data) =>
+    deleteGroupHandler(socketParams, data)
   );
 };

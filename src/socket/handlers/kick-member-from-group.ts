@@ -22,17 +22,12 @@ export const KickMemberFromGroupHandler = async (
           adminId,
         },
       },
-      Chat: {
-        participants: {
-          some: {
-            userId,
-          },
-        },
-      },
     },
-    include: {
+    select: {
+      chatId: true,
+      name: true,
       Chat: {
-        include: {
+        select: {
           ChatKey: {
             where: {
               userId,
@@ -78,10 +73,31 @@ export const KickMemberFromGroupHandler = async (
       },
     });
 
+    const messageIds = (
+      await tx.message.findMany({
+        where: {
+          chatId,
+          senderId: userId,
+        },
+        select: {
+          messageId: true,
+        },
+      })
+    )?.map(({ messageId }) => messageId);
+
+    await tx.messageStatus.deleteMany({
+      where: {
+        messageId: {
+          in: messageIds,
+        },
+      },
+    });
+
     await tx.message.deleteMany({
       where: {
-        chatId,
-        senderId: userId,
+        messageId: {
+          in: messageIds,
+        },
       },
     });
   });
@@ -113,5 +129,7 @@ export const KickMemberFromGroupHandler = async (
   io.to(groupId).emit(SocketEvents.KICK_MEMBER, {
     removedUserId: userId,
     removedUserName: group?.Chat?.participants[0]?.user?.username,
+    chatId,
+    groupName: group?.name,
   });
 };

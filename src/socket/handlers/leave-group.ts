@@ -9,7 +9,7 @@ export const leaveGroupHandler = (
   { groupIds }: LeaveGroup
 ) => {
   groupIds?.forEach((id: string) => {
-    socket.leave(id);
+    socket.leave(id)
     console.log("leaveGroup", id);
   });
 };

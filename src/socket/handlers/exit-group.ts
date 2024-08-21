@@ -94,6 +94,23 @@ export const exitGroupHandler = async (
       },
     });
 
+    if (isExitByAdmin) {
+      const admin = await tx.groupAdmin.findFirst({
+        where: {
+          adminId: payload.userId,
+          groupId,
+        },
+        select: {
+          id: true,
+        },
+      });
+      await tx.groupAdmin.delete({
+        where: {
+          id: admin?.id,
+        },
+      });
+    }
+
     await tx.chat.update({
       where: {
         chatId,
