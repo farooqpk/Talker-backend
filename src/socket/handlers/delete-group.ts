@@ -22,6 +22,7 @@ export const deleteGroupHandler = async (
     },
     select: {
       chatId: true,
+      name: true,
       Chat: {
         select: {
           participants: {
@@ -81,6 +82,12 @@ export const deleteGroupHandler = async (
       },
     });
 
+    await tx.groupAdmin.deleteMany({
+      where: {
+        groupId,
+      },
+    });
+
     await tx.group.delete({
       where: {
         groupId,
@@ -113,6 +120,8 @@ export const deleteGroupHandler = async (
   ]);
 
   io.to(groupId).emit(SocketEvents.DELETE_GROUP, {
-    groupId,
+    groupName: group.name,
+    deletedBy: payload.userId,
+    chatId,
   });
 };
