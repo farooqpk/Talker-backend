@@ -19,19 +19,23 @@ export const isAnyGroupAdmin = async (req: Request, res: Response) => {
               not: req.userId,
             },
           },
-          select: {
-            adminId: true,
-          },
         },
       },
     });
 
+    const doAllGroupsHaveRemainingAdmins = groups?.every(
+      ({ GroupAdmin }) => GroupAdmin?.length > 0
+    );
+
+    const groupsHaveNoRemainingAdmins = groups
+      ?.filter(({ GroupAdmin }) => GroupAdmin?.length === 0)
+      ?.map(({ name }) => name)
+      ?.join(", ");
+
     const status = {
       isAnyGroupAdmin: groups.length > 0,
-      groups: groups?.map(({ name }) => name)?.join(", ") || null,
-      doesAllGroupsHaveRemainingAdmins: groups?.every(
-        ({ GroupAdmin }) => GroupAdmin?.length > 0
-      ),
+      doAllGroupsHaveRemainingAdmins,
+      groupsHaveNoRemainingAdmins,
     };
 
     res.status(200).json(status);

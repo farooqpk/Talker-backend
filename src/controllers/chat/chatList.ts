@@ -68,7 +68,7 @@ export const chatList = async (req: Request, res: Response) => {
     const transofrmedChats = chats?.map(
       ({ ChatKey, Group, messages, participants, ...rest }) => {
         const encryptedKey = ChatKey[0]?.encryptedKey;
-        const recipient = participants?.[0]?.user;
+        const recipient = !rest?.isGroup ? participants?.[0]?.user : null;
         const group = Group?.[0];
         const message = messages[0];
         return {

@@ -68,7 +68,7 @@ export const socketHandler = (
     exitGroupHandler(socketParams, data)
   );
 
-  eventEmitter.on(AppEvents.GROUP_CREATED, (data) =>
+  eventEmitter.once(AppEvents.GROUP_CREATED, (data) =>
     groupCreatedHandler(socketParams, data)
   );
 
