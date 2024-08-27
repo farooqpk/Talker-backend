@@ -3,7 +3,7 @@ import { createJwtToken } from "../../utils/createJwtToken";
 import { prisma } from "../../utils/prisma";
 import * as bcrypt from "bcrypt";
 import { clearFromRedis } from "../../redis";
-import { NODE_ENV } from "../../config";
+import { COOKIE_DOMAIN, NODE_ENV } from "../../config";
 import dayjs from "dayjs";
 
 export const signup = async (req: Request, res: Response) => {
@@ -57,7 +57,9 @@ export const signup = async (req: Request, res: Response) => {
 
     const cookieOptions: CookieOptions = {
       httpOnly: true,
-      secure: NODE_ENV === "development" ? false : true,
+      secure: NODE_ENV === 'development' ? false : true,
+      domain: COOKIE_DOMAIN,
+      sameSite: NODE_ENV === 'development' ? "lax" : "none"
     };
 
     res.cookie("accesstoken", accesstoken, {
