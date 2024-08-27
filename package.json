@@ -2,11 +2,11 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "./dist/server.js",
+  "main": "./dist/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "node ./dist/server.js",
+    "start": "node ./dist/main.js",
     "dev": "ts-node-dev --respawn --transpile-only ./src/server.ts"
   },
   "author": "Ummar farooq",

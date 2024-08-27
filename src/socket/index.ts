@@ -1,4 +1,4 @@
-import { eventEmitter } from "../server";
+import { eventEmitter } from "../main";
 import { AppEvents, SocketEvents } from "../events";
 import { isNotTypingHandler } from "./handlers/is-not-typing";
 import { isOnlineHandler } from "./handlers/is-online";

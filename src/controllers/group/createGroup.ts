@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
 import { EncryptedChatKey } from "../../types/common";
-import { eventEmitter } from "../../server";
+import { eventEmitter } from "../../main";
 import { clearFromRedis } from "../../redis/index";
 import { AppEvents } from "../../events";
 
