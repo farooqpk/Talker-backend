@@ -46,7 +46,8 @@ jobs:
     - name: Rename and move frontend build
       run: |
         mv chatApp-frontEnd/dist client
-        cp -r client ./
+        mkdir -p ./client
+        cp -r client/* ./client/
 
     - name: Clean up
       run: rm -rf chatApp-frontEnd
