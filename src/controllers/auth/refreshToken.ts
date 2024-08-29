@@ -1,7 +1,7 @@
 import { CookieOptions, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { createJwtToken } from "../../utils/createJwtToken";
-import { COOKIE_DOMAIN, NODE_ENV, REFRESH_TOKEN_SECRET } from "../../config";
+import { NODE_ENV, REFRESH_TOKEN_SECRET } from "../../config";
 import dayjs from "dayjs";
 import { checkItemInSetRedis } from "../../redis/check-Item-In-set";
 
@@ -49,13 +49,10 @@ export const createAccessTokenFromRefreshToken = async (
       "access"
     );
 
-     const cookieOptions: CookieOptions = {
-       httpOnly: true,
-       secure: NODE_ENV === "development" ? false : true,
-       domain: COOKIE_DOMAIN,
-       sameSite: NODE_ENV === "development" ? "lax" : "none",
-       expires: dayjs().add(1, "hours").toDate(),
-     };
+    const cookieOptions: CookieOptions = {
+      httpOnly: true,
+      expires: dayjs().add(1, "hours").toDate(),
+    };
 
     res.cookie("accesstoken", newAccessToken, cookieOptions);
 

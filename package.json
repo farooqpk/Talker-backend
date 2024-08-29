@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "start": "node ./dist/main.js",
-    "dev": "ts-node-dev --respawn --transpile-only ./src/server.ts"
+    "dev": "ts-node-dev --respawn --transpile-only ./src/main.ts"
   },
   "author": "Ummar farooq",
   "license": "ISC",
@@ -22,7 +22,6 @@
     "axios": "^1.4.0",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.6",
-    "cors": "^2.8.5",
     "dayjs": "^1.11.11",
     "dotenv": "^16.1.4",
     "express": "^4.18.2",

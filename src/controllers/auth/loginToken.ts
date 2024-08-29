@@ -2,7 +2,7 @@ import { CookieOptions, Request, Response } from "express";
 import { clearFromRedis, getDataFromRedis } from "../../redis";
 import { prisma } from "../../utils/prisma";
 import { createJwtToken } from "../../utils/createJwtToken";
-import { COOKIE_DOMAIN, NODE_ENV } from "../../config";
+import {NODE_ENV } from "../../config";
 import dayjs from "dayjs";
 
 export const loginToken = async (req: Request, res: Response) => {
@@ -64,10 +64,7 @@ export const loginToken = async (req: Request, res: Response) => {
     );
 
      const cookieOptions: CookieOptions = {
-       httpOnly: true,
-       secure: NODE_ENV === "development" ? false : true,
-       domain: COOKIE_DOMAIN,
-       sameSite: NODE_ENV === "development" ? "lax" : "none",
+       httpOnly: true
      };
 
     res.cookie("accesstoken", accesstoken, {
