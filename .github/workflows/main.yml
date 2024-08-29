@@ -1,4 +1,4 @@
-name: Node.js Build
+name: Chat App CI/CD
 
 on:
   push:
@@ -15,16 +15,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout backend code
       uses: actions/checkout@v2
 
     - name: Use Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '20.11.1'  # Change to your desired Node.js version
+        node-version: '20.11.1'
 
-    - name: Install dependencies
-      run: npm install
+    - name: Install backend dependencies
+      run: npm ci
 
-    - name: Build
-      run: npm run build  # Change to your build script if needed
+    - name: Build backend
+      run: npm run build
+
+    - name: Checkout frontend code
+      uses: actions/checkout@v2
+      with:
+        repository: farooqpk/chatApp-frontEnd
+        path: chatApp-frontEnd
+
+    - name: Install frontend dependencies
+      working-directory: chatApp-frontEnd
+      run: npm ci
+
+    - name: Build frontend
+      working-directory: chatApp-frontEnd
+      run: npm run build
+
+    - name: Rename and move frontend build
+      run: |
+        mv chatApp-frontEnd/dist client
+        cp -r client ./
+
+    - name: Clean up
+      run: rm -rf chatApp-frontEnd
+
+    - name: List directory contents
+      run: ls -R
+
