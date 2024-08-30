@@ -33,10 +33,14 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Verify @vitejs/plugin-react-swc is installed
-if [ ! -d "node_modules/@vitejs/plugin-react-swc" ]; then
-  echo "Error: @vitejs/plugin-react-swc is missing. Installing it..."
-  npm install @vitejs/plugin-react-swc --save-dev
+# Explicitly install @vitejs/plugin-react-swc
+echo "Installing @vitejs/plugin-react-swc..."
+npm install @vitejs/plugin-react-swc --save-dev
+
+# Debugging: Check if the plugin was installed successfully
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to install @vitejs/plugin-react-swc."
+  exit 1
 fi
 
 # Build frontend
