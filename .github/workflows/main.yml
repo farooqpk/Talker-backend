@@ -26,8 +26,8 @@ jobs:
     - name: Install backend dependencies
       run: npm ci
 
-    - name: Build backend
-      run: npm run build
+    # - name: Build backend
+    #   run: npm run build
 
     # - name: Checkout frontend code
     #   uses: actions/checkout@v2
