@@ -7,12 +7,41 @@ import { chatRouter } from "../routes/chat";
 import { messageRouter } from "../routes/message";
 import { groupRouter } from "../routes/group";
 import cookieParser from "cookie-parser";
+import path from "node:path";
 
 export function configureExpress(app: express.Express) {
   app.use(express.json());
   app.use(cookieParser());
   app.use(express.urlencoded({ extended: true }));
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"], // Only allow resources from the same origin
+          scriptSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            "https://cdn.jsdelivr.net",
+            "https://cdnjs.cloudflare.com",
+          ],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "https://fonts.googleapis.com",
+          ],
+          fontSrc: ["'self'", "https:", "data:"], 
+          imgSrc: ["'self'", "data:", "https:", "blob:"],
+          connectSrc: ["'self'", "wss:", "https:", "http:"], // Allow connections to same origin, WebSockets, and https
+          objectSrc: ["'none'"], // Disallow embedding objects
+          mediaSrc: ["'self'"], // Allow media from the same origin
+          frameSrc: ["'self'"], // Allow frames from the same origin
+          workerSrc: ["'self'", "blob:"], 
+        },
+      },
+    })
+  );
+
   app.use(
     rateLimit({
       windowMs: 10 * 60 * 1000,
@@ -34,7 +63,7 @@ export function configureExpress(app: express.Express) {
     if (req.path.startsWith("/api") || req.path.startsWith("/socket.io")) {
       next();
     } else {
-      res.sendFile("index.html", { root: "client" });
+      res.sendFile(path.resolve(__dirname, "../../client/index.html"));
     }
   });
 }
