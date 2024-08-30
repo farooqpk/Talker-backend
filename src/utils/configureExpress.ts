@@ -30,13 +30,13 @@ export function configureExpress(app: express.Express) {
             "'unsafe-inline'",
             "https://fonts.googleapis.com",
           ],
-          fontSrc: ["'self'", "https:", "data:"], 
+          fontSrc: ["'self'", "https:", "data:"],
           imgSrc: ["'self'", "data:", "https:", "blob:"],
           connectSrc: ["'self'", "wss:", "https:", "http:"], // Allow connections to same origin, WebSockets, and https
           objectSrc: ["'none'"], // Disallow embedding objects
-          mediaSrc: ["'self'"], // Allow media from the same origin
-          frameSrc: ["'self'"], // Allow frames from the same origin
-          workerSrc: ["'self'", "blob:"], 
+          mediaSrc: ["'self'", "blob:"],
+          frameSrc: ["'self'"],
+          workerSrc: ["'self'", "blob:"],
         },
       },
     })
