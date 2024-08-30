@@ -29,26 +29,26 @@ jobs:
     - name: Build backend
       run: npm run build
 
-    - name: Checkout frontend code
-      uses: actions/checkout@v2
-      with:
-        repository: farooqpk/chatApp-frontEnd
-        path: chatApp-frontEnd
+    # - name: Checkout frontend code
+    #   uses: actions/checkout@v2
+    #   with:
+    #     repository: farooqpk/chatApp-frontEnd
+    #     path: chatApp-frontEnd
 
-    - name: Install frontend dependencies
-      working-directory: chatApp-frontEnd
-      run: npm ci
+    # - name: Install frontend dependencies
+    #   working-directory: chatApp-frontEnd
+    #   run: npm ci
 
-    - name: Build frontend
-      working-directory: chatApp-frontEnd
-      run: npm run build
+    # - name: Build frontend
+    #   working-directory: chatApp-frontEnd
+    #   run: npm run build
 
-    - name: Move frontend build to backend
-      run: |
-        rm -rf ./client
-        mv chatApp-frontEnd/dist ./client
+    # - name: Move frontend build to backend
+    #   run: |
+    #     rm -rf ./client
+    #     mv chatApp-frontEnd/dist ./client
 
-    - name: Clean up
-      run: rm -rf chatApp-frontEnd
+    # - name: Clean up
+    #   run: rm -rf chatApp-frontEnd
 
       
