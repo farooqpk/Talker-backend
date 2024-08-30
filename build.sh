@@ -5,7 +5,7 @@ git clone https://github.com/farooqpk/chatApp-frontEnd.git chatApp-frontEnd
 
 # Install frontend dependencies
 cd chatApp-frontEnd
-npm ci
+npm install
 
 # Build frontend
 npm run build
