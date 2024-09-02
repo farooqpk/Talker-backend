@@ -9,6 +9,7 @@ const {
   R2_SECRET_KEY,
   R2_BUCKET_NAME,
   NODE_ENV,
+  GEMINI_API_KEY,
 } = process.env;
 
 if (
@@ -21,7 +22,8 @@ if (
   !R2_ACCESS_KEY ||
   !R2_SECRET_KEY ||
   !R2_BUCKET_NAME ||
-  !NODE_ENV
+  !NODE_ENV ||
+  !GEMINI_API_KEY
 ) {
   throw new Error("Missing environment variables");
 }
@@ -37,4 +39,5 @@ export {
   R2_SECRET_KEY,
   R2_BUCKET_NAME,
   NODE_ENV,
+  GEMINI_API_KEY,
 };

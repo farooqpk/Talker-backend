@@ -8,6 +8,7 @@ import { messageRouter } from "../routes/message";
 import { groupRouter } from "../routes/group";
 import cookieParser from "cookie-parser";
 import path from "node:path";
+import { aiRouter } from "../routes/ai";
 
 export function configureExpress(app: express.Express) {
   app.use(express.json());
@@ -56,6 +57,7 @@ export function configureExpress(app: express.Express) {
   app.use("/api/chat", chatRouter);
   app.use("/api/message", messageRouter);
   app.use("/api/group", groupRouter);
+  app.use("/api/ai", aiRouter);
 
   app.use(express.static("client"));
 
