@@ -22,6 +22,8 @@ export enum SocketEvents {
   DELETE_GROUP = "deleteGroup",
   SET_PEER_ID = "setPeerId",
   GET_RECIPIENT_PEER_ID = "getRecipientPeerId",
+  END_CALL = "endCall",
+  REJECT_CALL = "rejectCall",
 }
 
 export enum AppEvents {

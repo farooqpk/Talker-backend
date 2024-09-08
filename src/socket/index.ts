@@ -20,6 +20,8 @@ import { setAsAdminHandler } from "./handlers/set-as-admin";
 import { deleteGroupHandler } from "./handlers/delete-group";
 import { setPeerIdHandler } from "./handlers/set-peerid";
 import { getRecipientPeerIdHandler } from "./handlers/get-peerid";
+import { endCallHandler } from "./handlers/end-call";
+import { rejectCallHandler } from "./handlers/reject-call";
 
 export const socketHandler = (
   socket: Socket,
@@ -104,5 +106,13 @@ export const socketHandler = (
 
   socket.on(SocketEvents.GET_RECIPIENT_PEER_ID, (data) => {
     getRecipientPeerIdHandler(socketParams, data);
+  });
+
+  socket.on(SocketEvents.END_CALL, (data) => {
+    endCallHandler(socketParams, data);
+  });
+
+  socket.on(SocketEvents.REJECT_CALL, (data) => {
+    rejectCallHandler(socketParams, data);
   });
 };
