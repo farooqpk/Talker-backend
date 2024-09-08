@@ -18,6 +18,8 @@ import { addNewMembersToGroupHandler } from "./handlers/add-new-members-to-group
 import { readMessageStatusHandler } from "./handlers/read-msg-status";
 import { setAsAdminHandler } from "./handlers/set-as-admin";
 import { deleteGroupHandler } from "./handlers/delete-group";
+import { setPeerIdHandler } from "./handlers/set-peerid";
+import { getRecipientPeerIdHandler } from "./handlers/get-peerid";
 
 export const socketHandler = (
   socket: Socket,
@@ -95,4 +97,12 @@ export const socketHandler = (
   socket.on(SocketEvents.DELETE_GROUP, (data) =>
     deleteGroupHandler(socketParams, data)
   );
+
+  socket.on(SocketEvents.SET_PEER_ID, (data) => {
+    setPeerIdHandler(socketParams, data);
+  });
+
+  socket.on(SocketEvents.GET_RECIPIENT_PEER_ID, (data) => {
+    getRecipientPeerIdHandler(socketParams, data);
+  });
 };

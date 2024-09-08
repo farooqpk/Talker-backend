@@ -20,6 +20,8 @@ export enum SocketEvents {
   SET_ADMIN = "setAdmin",
   ERROR = "error",
   DELETE_GROUP = "deleteGroup",
+  SET_PEER_ID = "setPeerId",
+  GET_RECIPIENT_PEER_ID = "getRecipientPeerId",
 }
 
 export enum AppEvents {
