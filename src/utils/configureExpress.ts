@@ -48,7 +48,6 @@ export function configureExpress(app: express.Express) {
       windowMs: 10 * 60 * 1000,
       max: 150,
       standardHeaders: true,
-      legacyHeaders: false,
     })
   );
 

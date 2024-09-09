@@ -186,7 +186,7 @@ export const deleteAccount = async (req: Request, res: Response) => {
       clearFromRedis({
         pattern: `userid_not:${userId}:*`,
       }),
-      clearFromRedis({ key: `socket:${userId}` }),
+      clearFromRedis({ key: [`socket:${userId}`, `peer:${userId}`] }),
       setDataAsSetInRedis({
         key: "blacklistedTokens",
         data: [accesstoken, refreshtoken],

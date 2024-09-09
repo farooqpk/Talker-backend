@@ -7,7 +7,7 @@ const connectToRedis = async () => {
   try {
     redisClient = new Redis(REDIS_URL!);
     console.log("Redis connected");
-    await clearSocketIdsOnStartup();
+    await Promise.all([clearSocketIdsOnStartup(), clearPeerIdsOnStartup()]);
   } catch (error) {
     console.error("Redis connection error:", error);
     throw error;
@@ -21,6 +21,17 @@ const clearSocketIdsOnStartup = async () => {
     console.log("Redis cleared socket ids on startup");
   } else {
     console.log("No socket ids to clear on startup");
+  }
+  return;
+};
+
+const clearPeerIdsOnStartup = async () => {
+  const peerIds = await redisClient.keys("peer:*");
+  if (peerIds.length > 0) {
+    await redisClient.del(...peerIds);
+    console.log("Redis cleared peer ids on startup");
+  } else {
+    console.log("No peer ids to clear on startup");
   }
   return;
 };

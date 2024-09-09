@@ -49,7 +49,9 @@ export function configureSocketIO(io: Server) {
 
       socket.on(SocketEvents.DISCONNECT, async () => {
         socket.rooms.forEach((room) => socket.leave(room));
-        await clearFromRedis({ key: `socket:${payload.userId}` });
+        await clearFromRedis({
+          key: [`socket:${payload.userId}`, `peer:${payload.userId}`],
+        });
         socket.broadcast.emit(SocketEvents.IS_DISCONNECTED, payload.userId);
         console.log(`Socket.IO: ${payload.username} disconnected`);
       });
