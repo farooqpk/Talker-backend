@@ -61,7 +61,10 @@ export const deleteMsgHandler = async (
   if (isGroup) {
     io.to(groupId!).emit(SocketEvents.DELETE_MESSAGE, messageId);
   } else {
-    const recipentSocketId = await getDataFromRedis(`socket:${recipientId}`);
+    const recipentSocketId = await getDataFromRedis(
+      `socket:${recipientId}`,
+      true
+    );
 
     io.to(recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]).emit(
       SocketEvents.DELETE_MESSAGE,
