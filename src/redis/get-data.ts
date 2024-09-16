@@ -1,12 +1,9 @@
 import { redisClient } from ".././utils/redis";
 
-export const getDataFromRedis = async (
-  key: string,
-  isString?: boolean
-): Promise<any> => {
+export const getDataFromRedis = async (key: string, isString?: boolean) => {
   try {
-    const messages = await redisClient.get(key);
-    if (messages) return isString ? messages : JSON.parse(messages);
+    const data = await redisClient.get(key);
+    if (data) return isString ? data : JSON.parse(data);
     return null;
   } catch (error) {
     console.log(error);

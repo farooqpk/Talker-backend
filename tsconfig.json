@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2019", 
     "module": "CommonJS", 
-    "rootDir": "./src", 
+    "rootDir": "./src",  
     "esModuleInterop": true,
     "strict": true, 
     "forceConsistentCasingInFileNames": true,

@@ -21,13 +21,13 @@ export const getChatKey = async (req: Request, res: Response) => {
       },
     });
 
-    await setDataInRedis(
-      `chatKey:${req.userId}:${chatId}`,
-      chatKey,
-      8 * 60 * 60,
-    );
+    await setDataInRedis({
+      key: `chatKey:${req.userId}:${chatId}`,
+      data: chatKey?.encryptedKey,
+      expirationTimeInSeconds: 8 * 60 * 60,
+    });
 
-    res.status(200).json(chatKey);
+    res.status(200).send(chatKey?.encryptedKey);
   } catch (error) {
     res.status(500).json(error);
   }

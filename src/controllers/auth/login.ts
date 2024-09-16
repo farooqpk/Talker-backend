@@ -1,7 +1,7 @@
-import { CookieOptions, Request, Response } from "express";
-import { createJwtToken } from "../../utils/createJwtToken";
+import { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
 import * as bcrypt from "bcrypt";
+import { setDataInRedis } from "../../redis";
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -33,30 +33,30 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    const acessToken = createJwtToken(
-      isUserNameAlreadyExist.userId,
-      isUserNameAlreadyExist.username,
-      "access"
-    );
-    const refreshToken = createJwtToken(
-      isUserNameAlreadyExist.userId,
-      isUserNameAlreadyExist.username,
-      "refresh"
-    );
+    // create random token for identifying user
+    const loginToken =
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15);
+
+    // store that login token in redis for 5 minutes
+    await setDataInRedis({
+      key: `loginToken:${isUserNameAlreadyExist.userId}`,
+      data: loginToken,
+      expirationTimeInSeconds: 300,
+      isString: true,
+    });
 
     return res.status(200).send({
       success: true,
       message: "User logged in successfully",
-      accesstoken: acessToken,
-      refreshtoken: refreshToken,
+      loginToken,
       user: {
         userId: isUserNameAlreadyExist.userId,
         username: isUserNameAlreadyExist.username,
+        publicKey: isUserNameAlreadyExist.publicKey,
       },
     });
   } catch (error: any) {
-    console.log(error);
-
     return res.status(500).json({
       success: false,
       message: "An error occurred during login.",

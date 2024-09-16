@@ -1,34 +1,28 @@
 import express, { Express } from "express";
 import dotenv from "dotenv";
-import http from "http";
+import http from "node:http";
 import { Server } from "socket.io";
 import { connectPrisma } from "./utils/prisma";
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import { connectToRedis } from "./utils/redis";
 import { configureExpress } from "./utils/configureExpress";
 import { configureSocketIO } from "./utils/configureSocketIO";
+import { PORT } from "./config";
 dotenv.config();
 
 const app: Express = express();
-const server = http.createServer(app);
+export const server = http.createServer(app);
 
 configureExpress(app);
 
-const io: Server = new Server(server, {
-  cors: {
-    // origin: process.env.CLIENT_URL,
-    credentials: true,
-  },
-});
+export const io: Server = new Server(server);
 
 configureSocketIO(io);
 
-export const ONLINE_USERS_SOCKET: Map<string, string> = new Map();
-
 export const eventEmitter = new EventEmitter();
 
-server.listen(process.env.PORT || 5000, async () => {
-  console.log(`Server listening on port ${process.env.PORT || 5000}`);
+server.listen(PORT || 5000, async () => {
+  console.log(`Server listening on port ${PORT || 5000}`);
   await connectPrisma();
   await connectToRedis();
 });

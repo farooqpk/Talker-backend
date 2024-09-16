@@ -1,15 +1,11 @@
 import { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
-import { getDataFromRedis, setDataInRedis } from "../../redis";
 
 export const findUser = async (req: Request, res: Response) => {
   try {
     const userId = req.params.userId;
 
-    const cachedUser = await getDataFromRedis(`user:${userId}`);
-    if (cachedUser) return res.status(200).json(cachedUser);
-
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findUniqueOrThrow({
       where: {
         userId,
       },
@@ -34,15 +30,6 @@ export const findUser = async (req: Request, res: Response) => {
         chatId: true,
       },
     });
-
-    await setDataInRedis(
-      `user:${userId}`,
-      {
-        ...user,
-        ...chat,
-      },
-      12 * 60 * 60
-    );
 
     res.status(200).json({
       ...user,

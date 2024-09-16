@@ -11,16 +11,16 @@ datasource db {
 }
 
 model User {
-  userId       String         @id @default(auto()) @map("_id") @db.ObjectId
-  username     String         @unique
-  password     String
-  publicKey    String
-  createdAt    DateTime
-  // Relationships
-  messagesSent Message[]      @relation("SentMessages")
-  participants Participants[]
-  Group        Group[]
-  ChatKey      ChatKey[]
+  userId        String          @id @default(auto()) @map("_id") @db.ObjectId
+  username      String          @unique
+  password      String
+  publicKey     String
+  createdAt     DateTime
+  messagesSent  Message[]       @relation("SentMessages")
+  participants  Participants[]
+  GroupAdmin    GroupAdmin[]
+  ChatKey       ChatKey[]
+  messageStatus MessageStatus[]
 }
 
 model Chat {
@@ -40,16 +40,17 @@ enum ContentType {
 }
 
 model Message {
-  messageId   String      @id @default(auto()) @map("_id") @db.ObjectId
-  chatId      String      @db.ObjectId
-  senderId    String      @db.ObjectId
-  content     String
+  messageId   String          @id @default(auto()) @map("_id") @db.ObjectId
+  chatId      String          @db.ObjectId
+  senderId    String          @db.ObjectId
+  content     String?
   contentType ContentType
+  mediaPath   String?
   createdAt   DateTime
-  isDeleted   Boolean     @default(false)
-
-  chat   Chat @relation(fields: [chatId], references: [chatId])
-  sender User @relation("SentMessages", fields: [senderId], references: [userId])
+  isDeleted   Boolean         @default(false)
+  status      MessageStatus[]
+  chat        Chat            @relation(fields: [chatId], references: [chatId])
+  sender      User            @relation("SentMessages", fields: [senderId], references: [userId])
 }
 
 model Participants {
@@ -63,15 +64,22 @@ model Participants {
 }
 
 model Group {
-  groupId     String   @id @default(auto()) @map("_id") @db.ObjectId
-  chatId      String   @db.ObjectId
+  groupId     String       @id @default(auto()) @map("_id") @db.ObjectId
+  chatId      String       @db.ObjectId
   name        String
   description String
   createdAt   DateTime
-  adminId     String   @db.ObjectId
-  // Relationships
-  Chat        Chat     @relation(fields: [chatId], references: [chatId])
-  admin       User     @relation(fields: [adminId], references: [userId])
+  Chat        Chat         @relation(fields: [chatId], references: [chatId])
+  GroupAdmin  GroupAdmin[]
+}
+
+model GroupAdmin {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  adminId        String   @db.ObjectId
+  groupId        String   @db.ObjectId
+  createdAt      DateTime @db.Timestamp
+  admin          User     @relation(fields: [adminId], references: [userId])
+  group          Group    @relation(fields: [groupId], references: [groupId])
 }
 
 model ChatKey {
@@ -82,4 +90,17 @@ model ChatKey {
 
   chat Chat @relation(fields: [chatId], references: [chatId])
   user User @relation(fields: [userId], references: [userId])
+}
+
+model MessageStatus {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  messageId String    @db.ObjectId
+  userId    String    @db.ObjectId
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+
+  message Message @relation(fields: [messageId], references: [messageId])
+  user    User    @relation(fields: [userId], references: [userId])
+
+  @@unique([messageId, userId])
 }

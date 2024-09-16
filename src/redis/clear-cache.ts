@@ -1,11 +1,11 @@
 import { redisClient } from ".././utils/redis";
 
-export const clearCacheFromRedis = async ({
+export const clearFromRedis = async ({
   key,
   pattern,
 }: {
   key?: string | string[];
-  pattern?: string;
+  pattern?: string
 }) => {
   try {
     if (pattern) {

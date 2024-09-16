@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
 import { getDataFromRedis, setDataInRedis } from "../../redis/index";
 
@@ -30,10 +30,20 @@ export const messageList = async (req: Request, res: Response) => {
             username: true,
           },
         },
+        status: {
+          select: {
+            userId: true,
+            isRead: true,
+          },
+        },
       },
     });
 
-    await setDataInRedis(`messages:${chatId}`, messages, 4 * 60 * 60);
+    await setDataInRedis({
+      key: `messages:${chatId}`,
+      data: messages,
+      expirationTimeInSeconds: 2 * 60 * 60,
+    });
 
     res.status(200).json(messages);
   } catch (error) {
