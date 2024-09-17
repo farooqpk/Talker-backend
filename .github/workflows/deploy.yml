@@ -46,13 +46,14 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          known_host: ${{ secrets.VPS_KNOWN_HOST }}
           
           script: |
             echo "Starting deployment to VPS..."
 
             # Ensure necessary directories exist on the VPS
-            echo "Creating necessary directories on the VPS..."
-            sudo mkdir -p /home/${{ secrets.VPS_USERNAME }}/app /etc/nginx
+            # echo "Creating necessary directories on the VPS..."
+            # sudo mkdir -p /home/${{ secrets.VPS_USERNAME }}/app /etc/nginx
 
             # Copy docker-compose.yml to VPS
             echo "Copying docker-compose.yml to VPS..."
