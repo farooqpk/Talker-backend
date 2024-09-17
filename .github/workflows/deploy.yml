@@ -48,15 +48,13 @@ jobs:
           script: |
             echo "Starting deployment to VPS..."
             echo "Copying docker-compose.yml to VPS..."
-            whoami
             pwd
             ls -la
             echo "Continuing with deployment..."
-            scp ./docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/app/docker-compose.yml
-            echo "Copying and updating nginx.conf on VPS..."
-            scp ./nginx/default.conf ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/app/nginx/default.conf
+            echo "Copying docker-compose.yml and nginx.conf to VPS..."
+            scp -o StrictHostKeyChecking=no ./docker-compose.yml ./nginx/default.conf ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/app/
             echo "Restarting Docker containers on the VPS..."
-            ssh ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} '
+            ssh -o StrictHostKeyChecking-no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} '
               cd /home/${{ secrets.VPS_USERNAME }}/app &&
               docker-compose down &&
               docker-compose pull &&
