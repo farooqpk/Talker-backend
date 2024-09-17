@@ -12,30 +12,30 @@ jobs:
       - name: Checkout backend repo
         uses: actions/checkout@v2
 
-      # Set up Docker
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+      # # Set up Docker
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v1
 
-      # Log in to Docker Hub
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+      # # Log in to Docker Hub
+      # - name: Log in to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
-      # Build the Docker image
-      - name: Build Docker Image
-        run: |
-          echo "Building Docker image..."
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/talker:latest .
-          echo "Docker image built successfully."
+      # # Build the Docker image
+      # - name: Build Docker Image
+      #   run: |
+      #     echo "Building Docker image..."
+      #     docker build -t ${{ secrets.DOCKER_USERNAME }}/talker:latest .
+      #     echo "Docker image built successfully."
 
-      # Push the Docker image to Docker Hub
-      - name: Push Docker Image
-        run: |
-          echo "Pushing Docker image to Docker Hub..."
-          docker push ${{ secrets.DOCKER_USERNAME }}/talker:latest
-          echo "Docker image pushed successfully."
+      # # Push the Docker image to Docker Hub
+      # - name: Push Docker Image
+      #   run: |
+      #     echo "Pushing Docker image to Docker Hub..."
+      #     docker push ${{ secrets.DOCKER_USERNAME }}/talker:latest
+      #     echo "Docker image pushed successfully."
 
       # Deploy to VPS
       - name: Deploy to VPS
@@ -44,11 +44,14 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          debug: true 
           script: |
             echo "Starting deployment to VPS..."
-            echo "Testing SSH connection..."
-            ssh ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "echo 'SSH connection successful.'"
             echo "Copying docker-compose.yml to VPS..."
+            whoami
+            pwd
+            ls -la
+            echo "Continuing with deployment..."
             scp ./docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/app/docker-compose.yml
             echo "Copying and updating nginx.conf on VPS..."
             scp ./nginx/default.conf ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/app/nginx/default.conf
