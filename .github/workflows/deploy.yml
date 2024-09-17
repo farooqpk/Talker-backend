@@ -58,8 +58,9 @@ jobs:
           script: |
             echo "Starting deployment to VPS..."
             cd /home/${{ secrets.VPS_USERNAME }}/app
-            docker-compose down
-            docker-compose pull
-            docker-compose up -d --build
+            docker compose version
+            docker compose down
+            docker compose pull
+            docker compose up --build
             echo "Deployment completed successfully."
             '
