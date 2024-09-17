@@ -7,30 +7,36 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+
       # Checkout the current repository
       - name: Checkout backend repo
         uses: actions/checkout@v2
+
       # Set up Docker
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
+
       # Log in to Docker Hub
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
       # Build the Docker image
       - name: Build Docker Image
         run: |
           echo "Building Docker image..."
           docker build -t ${{ secrets.DOCKER_USERNAME }}/talker:latest .
           echo "Docker image built successfully."
+
       # Push the Docker image to Docker Hub
       - name: Push Docker Image
         run: |
           echo "Pushing Docker image to Docker Hub..."
           docker push ${{ secrets.DOCKER_USERNAME }}/talker:latest
           echo "Docker image pushed successfully."
+
       # Deploy to VPS
       - name: Deploy to VPS
         uses: appleboy/ssh-action@master
@@ -38,26 +44,16 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          script_stop: true
-          command_timeout: 200m
           script: |
             echo "Starting deployment to VPS..."
-            # Disable strict host key checking for this session
-            mkdir -p ~/.ssh
-            echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
-            # Ensure necessary directories exist on the VPS
-            # echo "Creating necessary directories on the VPS..."
-            # sudo mkdir -p /home/${{ secrets.VPS_USERNAME }}/app /etc/nginx
-            # Copy docker-compose.yml to VPS
+            echo "Testing SSH connection..."
+            ssh ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "echo 'SSH connection successful.'"
             echo "Copying docker-compose.yml to VPS..."
-            scp -o StrictHostKeyChecking=no ./docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/app
-            # Copy and update nginx.conf on VPS
+            scp ./docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/app/docker-compose.yml
             echo "Copying and updating nginx.conf on VPS..."
-            scp -o StrictHostKeyChecking=no ./nginx/default.conf ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/default.conf
-            ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "envsubst '\$PORT' < /tmp/default.conf > /etc/nginx/nginx.conf"
-            # SSH into the VPS and restart containers using Docker Compose
+            scp ./nginx/default.conf ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/app/nginx/default.conf
             echo "Restarting Docker containers on the VPS..."
-            ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} '
+            ssh ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} '
               cd /home/${{ secrets.VPS_USERNAME }}/app &&
               docker-compose down &&
               docker-compose pull &&
