@@ -45,7 +45,8 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASS }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          
           script: |
             echo "Starting deployment to VPS..."
 
