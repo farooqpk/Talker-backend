@@ -41,13 +41,11 @@ jobs:
 
       # Deploy to VPS
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v0.1.5
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          passphrase: ${{ secrets.VPS_PASSPHRASE }}
-          port: 22
+          password: ${{ secrets.VPS_PASS }}
           script: |
             echo "Starting deployment to VPS..."
 
