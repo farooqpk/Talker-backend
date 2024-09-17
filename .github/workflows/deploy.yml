@@ -46,18 +46,14 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           debug: true 
           script: |
-            echo "Starting deployment to VPS..."
-            echo "Copying docker-compose.yml to VPS..."
-            pwd
-            ls -la
-            echo "Continuing with deployment..."
-            echo "Copying docker-compose.yml and nginx.conf to VPS..."
-            scp -o StrictHostKeyChecking=no ./docker-compose.yml ./nginx/default.conf ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/app/
-            echo "Restarting Docker containers on the VPS..."
-            ssh -o StrictHostKeyChecking-no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} '
-              cd /home/${{ secrets.VPS_USERNAME }}/app &&
-              docker-compose down &&
-              docker-compose pull &&
-              docker-compose up -d --build &&
-              echo "Docker containers restarted successfully."
+           echo "Starting deployment to VPS..."
+           pwd
+           ls -la
+           echo "Copying files and restarting Docker containers..."
+           scp -o StrictHostKeyChecking=no ./docker-compose.yml ./nginx/default.conf /home/${{ secrets.VPS_USERNAME }}/app/
+           cd /home/${{ secrets.VPS_USERNAME }}/app
+           docker-compose down
+           docker-compose pull
+           docker-compose up -d --build
+           echo "Deployment completed successfully."
             '
