@@ -1,14 +1,13 @@
 {
-  "name": "backend",
+  "name": "talker",
   "version": "1.0.0",
-  "description": "",
+  "description": "talker backend",
   "main": "./dist/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prebuild": "chmod +x build.sh",
-    "build": "tsc && ./build.sh",
     "start": "node ./dist/main.js",
-    "dev": "ts-node-dev --respawn --transpile-only ./src/main.ts"
+    "dev": "ts-node-dev --respawn --transpile-only ./src/main.ts",
+    "build": "tsc"
   },
   "author": "Ummar farooq",
   "license": "ISC",

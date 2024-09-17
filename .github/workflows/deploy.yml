@@ -1,0 +1,74 @@
+name: CI/CD Deployment
+
+on:
+  push:
+    branches:
+      - master
+      
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      # Checkout the current repository
+      - name: Checkout backend repo
+        uses: actions/checkout@v2
+
+      # Set up Docker
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+        id: docker-login
+
+      # Build the Docker image
+      - name: Build Docker Image
+        run: |
+          echo "Building Docker image..."
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/talker:latest .
+          echo "Docker image built successfully."
+
+      # Push the Docker image to Docker Hub
+      - name: Push Docker Image
+        run: |
+          echo "Pushing Docker image to Docker Hub..."
+          docker push ${{ secrets.DOCKER_USERNAME }}/talker:latest
+          echo "Docker image pushed successfully."
+
+      # Deploy to VPS
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            echo "Starting deployment to VPS..."
+            
+            # Ensure necessary directories exist on the VPS
+            echo "Creating necessary directories on the VPS..."
+            ssh ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} 'mkdir -p /home/${{ secrets.VPS_USERNAME }}/app /etc/nginx'
+            
+            # Copy docker-compose.yml to VPS
+            echo "Copying docker-compose.yml to VPS..."
+            scp ./docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/app
+            
+            # Copy nginx.conf to VPS
+            echo "Copying nginx.conf to VPS..."
+            scp ./nginx/default.conf ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/etc/nginx/nginx.conf
+            
+            # SSH into the VPS and restart containers using Docker Compose
+            echo "Restarting Docker containers on the VPS..."
+            ssh ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} '
+              cd /home/${{ secrets.VPS_USERNAME }}/app &&
+              docker-compose down &&
+              docker-compose pull &&
+              docker-compose up -d --build
+              echo "Docker containers restarted successfully."
+            '

@@ -58,13 +58,13 @@ export function configureExpress(app: express.Express) {
   app.use("/api/group", groupRouter);
   app.use("/api/ai", aiRouter);
 
-  app.use(express.static("client"));
+  // app.use(express.static("client"));
 
-  app.get("*", (req, res, next) => {
-    if (req.path.startsWith("/api") || req.path.startsWith("/socket.io")) {
-      next();
-    } else {
-      res.sendFile(path.resolve(__dirname, "../../client/index.html"));
-    }
-  });
+  // app.get("*", (req, res, next) => {
+  //   if (req.path.startsWith("/api") || req.path.startsWith("/socket.io")) {
+  //     next();
+  //   } else {
+  //     res.sendFile(path.resolve(__dirname, "../../client/index.html"));
+  //   }
+  // });
 }

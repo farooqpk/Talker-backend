@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  chat-backend:
+    image: ummarfarooqpk/talker:latest
+    container_name: chat-backend
+    restart: always
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+     env_files: .env
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:mainline-alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+    - ./nginx/default.conf:/etc/nginx/conf.d/default.conf  # NGINX configuration
+    - /var/www/html:/usr/share/nginx/html  # Serve static files
+    - /etc/letsencrypt:/etc/letsencrypt  # Certificates volume
+    depends_on:
+      - chat-backend
+    restart: always
+    networks:
+      - app-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    command: |
+      certonly --webroot --webroot-path=/var/www/html \
+      --email ${CERTBOT_EMAIL} --agree-tos --no-eff-email \
+      --force-renewal -d talker.fun
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt  # Certificates volume shared with nginx
+      - /var/www/html:/var/www/html  # Webroot path for certbot to place challenge files
+    depends_on:
+      - nginx
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
