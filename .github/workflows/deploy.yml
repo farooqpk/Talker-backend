@@ -51,7 +51,7 @@ jobs:
 
             # Ensure necessary directories exist on the VPS
             echo "Creating necessary directories on the VPS..."
-            mkdir -p /home/${{ secrets.VPS_USERNAME }}/app /etc/nginx
+            sudo mkdir -p /home/${{ secrets.VPS_USERNAME }}/app /etc/nginx
 
             # Copy docker-compose.yml to VPS
             echo "Copying docker-compose.yml to VPS..."
