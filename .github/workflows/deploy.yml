@@ -52,6 +52,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           debug: true
           script: |
+            set -e
             echo "Starting deployment to VPS..."
             cd /home/${{ secrets.USERNAME }}/app
             docker compose down
