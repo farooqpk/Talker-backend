@@ -51,20 +51,11 @@ export function configureExpress(app: express.Express) {
     })
   );
 
+  app.get("/api", (req, res) => res.send("Hello World!"));
   app.use("/api/auth", authRouter);
   app.use("/api/user", userRouter);
   app.use("/api/chat", chatRouter);
   app.use("/api/message", messageRouter);
   app.use("/api/group", groupRouter);
   app.use("/api/ai", aiRouter);
-
-  // app.use(express.static("client"));
-
-  // app.get("*", (req, res, next) => {
-  //   if (req.path.startsWith("/api") || req.path.startsWith("/socket.io")) {
-  //     next();
-  //   } else {
-  //     res.sendFile(path.resolve(__dirname, "../../client/index.html"));
-  //   }
-  // });
 }
