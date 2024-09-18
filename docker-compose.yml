@@ -1,3 +1,5 @@
+version: '3'
+
 services:
   chat-backend:
     image: ummarfarooqpk/talker:latest
@@ -21,12 +23,17 @@ services:
       - web-root:/var/www/html
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
-      - frontend-build:/usr/share/nginx/html/frontend 
+      - frontend-build:/usr/share/nginx/html/frontend
     depends_on:
       - chat-backend
     restart: unless-stopped
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   certbot:
     image: certbot/certbot
@@ -36,11 +43,12 @@ services:
       - certbot-var:/var/lib/letsencrypt
       - web-root:/var/www/html
     depends_on:
-      - nginx
-    command: certonly --webroot --webroot-path=/var/www/html --email ${CERTBOT_EMAIL} --agree-tos --no-eff-email -d talker.fun -d www.talker.fun
+      nginx:
+        condition: service_healthy
+    command: certbot certonly --staging --webroot --webroot-path=/var/www/html --email ${CERTBOT_EMAIL} --agree-tos --no-eff-email -d talker.fun -d www.talker.fun
     restart: unless-stopped
     networks:
-      - app-network
+    - app-network
 
 volumes:
   certbot-etc:
