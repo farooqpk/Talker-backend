@@ -5,3 +5,4 @@ dist
 docker-compose.yml
 github
 .env
+init-letsencrypt.sh
