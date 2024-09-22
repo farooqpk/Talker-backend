@@ -48,7 +48,6 @@ export const login = async (req: Request, res: Response) => {
 
     return res.status(200).send({
       success: true,
-      message: "User logged in successfully",
       loginToken,
       user: {
         userId: isUserNameAlreadyExist.userId,

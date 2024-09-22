@@ -2,7 +2,11 @@ import { CookieOptions, Request, Response } from "express";
 import { clearFromRedis, getDataFromRedis } from "../../redis";
 import { prisma } from "../../utils/prisma";
 import { createJwtToken } from "../../utils/createJwtToken";
-import {NODE_ENV } from "../../config";
+import {
+  ACCESS_TOKEN_EXPIRY,
+  NODE_ENV,
+  REFRESH_TOKEN_EXPIRY,
+} from "../../config";
 import dayjs from "dayjs";
 
 export const loginToken = async (req: Request, res: Response) => {
@@ -63,17 +67,21 @@ export const loginToken = async (req: Request, res: Response) => {
       "refresh"
     );
 
-     const cookieOptions: CookieOptions = {
-       httpOnly: true
-     };
+    const cookieOptions: CookieOptions = {
+      httpOnly: true,
+    };
 
     res.cookie("accesstoken", accesstoken, {
       ...cookieOptions,
-      expires: dayjs().add(1, "hours").toDate(),
+      expires: dayjs()
+        .add(parseInt(ACCESS_TOKEN_EXPIRY || "2"), "hours")
+        .toDate(),
     });
     res.cookie("refreshtoken", refreshtoken, {
       ...cookieOptions,
-      expires: dayjs().add(14, "days").toDate(),
+      expires: dayjs()
+        .add(parseInt(REFRESH_TOKEN_EXPIRY || "30"), "days")
+        .toDate(),
     });
 
     return res.status(200).json({

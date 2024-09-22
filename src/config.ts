@@ -10,6 +10,8 @@ const {
   R2_BUCKET_NAME,
   NODE_ENV,
   GEMINI_API_KEY,
+  ACCESS_TOKEN_EXPIRY,
+  REFRESH_TOKEN_EXPIRY,
 } = process.env;
 
 if (
@@ -23,7 +25,9 @@ if (
   !R2_SECRET_KEY ||
   !R2_BUCKET_NAME ||
   !NODE_ENV ||
-  !GEMINI_API_KEY
+  !GEMINI_API_KEY ||
+  !ACCESS_TOKEN_EXPIRY ||
+  !REFRESH_TOKEN_EXPIRY
 ) {
   throw new Error("Missing environment variables");
 }
@@ -40,4 +44,6 @@ export {
   R2_BUCKET_NAME,
   NODE_ENV,
   GEMINI_API_KEY,
+  ACCESS_TOKEN_EXPIRY,
+  REFRESH_TOKEN_EXPIRY,
 };

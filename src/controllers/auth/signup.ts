@@ -3,7 +3,10 @@ import { createJwtToken } from "../../utils/createJwtToken";
 import { prisma } from "../../utils/prisma";
 import * as bcrypt from "bcrypt";
 import { clearFromRedis } from "../../redis";
-import { NODE_ENV } from "../../config";
+import {
+  ACCESS_TOKEN_EXPIRY,
+  REFRESH_TOKEN_EXPIRY,
+} from "../../config";
 import dayjs from "dayjs";
 
 export const signup = async (req: Request, res: Response) => {
@@ -26,6 +29,7 @@ export const signup = async (req: Request, res: Response) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
     const user = await prisma.user.create({
       data: {
         username,
@@ -61,11 +65,15 @@ export const signup = async (req: Request, res: Response) => {
 
     res.cookie("accesstoken", accesstoken, {
       ...cookieOptions,
-      expires: dayjs().add(1, "hours").toDate(),
+      expires: dayjs()
+        .add(parseInt(ACCESS_TOKEN_EXPIRY || "2"), "hours")
+        .toDate(),
     });
     res.cookie("refreshtoken", refreshtoken, {
       ...cookieOptions,
-      expires: dayjs().add(14, "days").toDate(),
+      expires: dayjs()
+        .add(parseInt(REFRESH_TOKEN_EXPIRY || "30"), "days")
+        .toDate(),
     });
 
     return res.status(201).send({

@@ -1,9 +1,13 @@
-import { Prisma } from "@prisma/client";
 import jwt from "jsonwebtoken";
-import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from "../config";
+import {
+  ACCESS_TOKEN_SECRET,
+  REFRESH_TOKEN_SECRET,
+  ACCESS_TOKEN_EXPIRY,
+  REFRESH_TOKEN_EXPIRY,
+} from "../config";
 
 export const createJwtToken = (
-  userId: Prisma.UserCreateInput["userId"],
+  userId: string,
   username: string,
   publicKey: string,
   tokenType: "access" | "refresh"
@@ -12,7 +16,10 @@ export const createJwtToken = (
     { userId, username, publicKey },
     tokenType === "access" ? ACCESS_TOKEN_SECRET! : REFRESH_TOKEN_SECRET!,
     {
-      expiresIn: tokenType === "access" ? "1h" : "14d",
+      expiresIn:
+        tokenType === "access"
+          ? `${ACCESS_TOKEN_EXPIRY}h`
+          : `${REFRESH_TOKEN_EXPIRY}d`,
     }
   );
 };
