@@ -56,6 +56,14 @@ This is the backend server for a real-time chat application built with Node.js a
       REFRESH_TOKEN_EXPIRY=30
    
 
+## Building for Production
+
+To create a production build:
+
+npm run build
+
+The built files will be in the `dist` directory.
+
 ## Usage
 
 1. Start the server:
