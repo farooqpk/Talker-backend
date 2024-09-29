@@ -75,6 +75,6 @@ This is the backend server for a real-time chat application built with Node.js a
 
 ## Contact
 
-Linkedin - https://linkedin.com/in/ummarfarooq-pk
+- LinkedIn: [Ummar Farooq PK](https://linkedin.com/in/ummarfarooq-pk)
 
-Live Link: [https://talker.fun](https://talker.fun)
+- Live Demo: [talker.fun](https://talker.fun)
