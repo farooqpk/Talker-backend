@@ -12,8 +12,8 @@ userRouter.get("/getUsersForSearch", verifyToken, searchUsers);
 
 userRouter.get("/:userId", verifyToken, findUser);
 
+userRouter.get("/is-any-group-admin/:userId", verifyToken, isAnyGroupAdmin);
+
 userRouter.post("/get-public-keys", verifyToken, findPublicKeys);
 
-userRouter.delete("/delete-account", verifyToken,deleteAccount);
-
-userRouter.get("/is-any-group-admin/:userId", verifyToken, isAnyGroupAdmin);
+userRouter.delete("/delete-account", verifyToken, deleteAccount);

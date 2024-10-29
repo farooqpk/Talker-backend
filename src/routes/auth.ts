@@ -23,8 +23,6 @@ authRouter.post("/login", validateData(loginSchema), login);
 // request for access and refresh token after login
 authRouter.post("/login/token", loginToken);
 
-authRouter.get("/verifyRoute", verifyRoute);
-
 authRouter.post("/refresh", createAccessTokenFromRefreshToken);
 
 authRouter.post(
@@ -33,4 +31,6 @@ authRouter.post(
   updateUsername
 );
 
-authRouter.post("/logout",logout)
+authRouter.post("/logout", logout);
+
+authRouter.get("/verifyRoute", verifyRoute);

@@ -156,6 +156,12 @@ export const deleteAccount = async (req: Request, res: Response) => {
         },
       });
 
+      await tx.aiChatHistory.deleteMany({
+        where: {
+          userId,
+        },
+      });
+
       await tx.user.delete({
         where: {
           userId,

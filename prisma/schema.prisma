@@ -21,6 +21,7 @@ model User {
   GroupAdmin    GroupAdmin[]
   ChatKey       ChatKey[]
   messageStatus MessageStatus[]
+  AiChatHistory AiChatHistory[]
 }
 
 model Chat {
@@ -74,12 +75,12 @@ model Group {
 }
 
 model GroupAdmin {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  adminId        String   @db.ObjectId
-  groupId        String   @db.ObjectId
-  createdAt      DateTime @db.Timestamp
-  admin          User     @relation(fields: [adminId], references: [userId])
-  group          Group    @relation(fields: [groupId], references: [groupId])
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  adminId   String   @db.ObjectId
+  groupId   String   @db.ObjectId
+  createdAt DateTime @db.Timestamp
+  admin     User     @relation(fields: [adminId], references: [userId])
+  group     Group    @relation(fields: [groupId], references: [groupId])
 }
 
 model ChatKey {
@@ -103,4 +104,18 @@ model MessageStatus {
   user    User    @relation(fields: [userId], references: [userId])
 
   @@unique([messageId, userId])
+}
+
+model AiChatHistory {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String     @db.ObjectId
+  role      AiChatRole
+  content   String
+  createdAt DateTime   @default(now()) @db.Timestamp
+  user      User       @relation(fields: [userId], references: [userId])
+}
+
+enum AiChatRole {
+  user
+  model
 }
