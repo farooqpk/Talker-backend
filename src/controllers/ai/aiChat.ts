@@ -6,6 +6,10 @@ import { AiChatRole } from "@prisma/client";
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY!);
 
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash-latest",
+});
+
 export const aiChat = async (req: Request, res: Response) => {
   try {
     const message = req.body?.message;
@@ -14,10 +18,6 @@ export const aiChat = async (req: Request, res: Response) => {
     if (!message) {
       return res.status(400).json({ message: "Message is required" });
     }
-
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-latest",
-    });
 
     const history = await prisma.aiChatHistory.findMany({
       where: {
