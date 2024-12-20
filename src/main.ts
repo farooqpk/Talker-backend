@@ -23,6 +23,5 @@ export const eventEmitter = new EventEmitter();
 
 server.listen(PORT || 5000, async () => {
   console.log(`Server listening on port ${PORT || 5000}`);
-  await connectPrisma();
-  await connectToRedis();
+  await Promise.all([connectPrisma(),connectToRedis()])
 });
