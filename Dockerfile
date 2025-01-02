@@ -1,12 +1,5 @@
 # Stage 1: Build
-FROM node:20-alpine AS build
-
-# Install OpenSSL 3.x and other dependencies for Prisma
-RUN apk update && \
-    apk add --no-cache \
-    openssl3 \
-    zlib \
-    && rm -rf /var/cache/apk/*
+FROM node:20-slim AS build
 
 # Set the working directory
 WORKDIR /app
@@ -24,7 +17,7 @@ ENV NODE_ENV=production
 RUN npm run build
 
 # Stage 2: Production
-FROM node:20-alpine
+FROM node:20-slim
 
 # Set the working directory
 WORKDIR /app
