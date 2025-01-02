@@ -1,13 +1,6 @@
 # Stage 1: Build
 FROM node:20-alpine AS build
 
-# Install OpenSSL and other dependencies required by Prisma
-RUN apk update && \
-    apk add --no-cache \
-    openssl \
-    libssl1.1 \
-    && rm -rf /var/cache/apk/*
-    
 # Set the working directory
 WORKDIR /app
 
