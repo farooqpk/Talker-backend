@@ -1,8 +1,11 @@
 # Stage 1: Build
 FROM node:20-slim AS build
 
-# Install OpenSSL
-RUN apt-get update && apt-get install -y openssl
+# Install OpenSSL 3.0.x (for Prisma) and log the OpenSSL version
+RUN apt-get update -y && \
+    apt-get install -y openssl=3.0.* && \
+    apt-get clean && \
+    echo "OpenSSL Version: $(openssl version)"
 
 # Set the working directory
 WORKDIR /app
