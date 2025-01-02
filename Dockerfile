@@ -1,11 +1,5 @@
 # Stage 1: Build
-FROM node:20-slim AS build
-
-# Install OpenSSL 3.0.x (for Prisma) and log the OpenSSL version
-RUN apt-get update -y && \
-    apt-get install -y openssl=3.0.* && \
-    apt-get clean && \
-    echo "OpenSSL Version: $(openssl version)"
+FROM node:20-alpine AS build
 
 # Set the working directory
 WORKDIR /app
@@ -23,7 +17,7 @@ ENV NODE_ENV=production
 RUN npm run build
 
 # Stage 2: Production
-FROM node:20-slim
+FROM node:20-alpine
 
 # Set the working directory
 WORKDIR /app
