@@ -7,8 +7,8 @@ import { chatRouter } from "../routes/chat";
 import { messageRouter } from "../routes/message";
 import { groupRouter } from "../routes/group";
 import cookieParser from "cookie-parser";
-import path from "node:path";
 import { aiRouter } from "../routes/ai";
+import morgan from "morgan";
 
 export function configureExpress(app: express.Express) {
   app.use(express.json());
@@ -50,6 +50,8 @@ export function configureExpress(app: express.Express) {
       standardHeaders: true,
     })
   );
+
+  app.use(morgan("common"));
 
   app.get("/api", (req, res) => res.send("Hello World!"));
   app.use("/api/auth", authRouter);
