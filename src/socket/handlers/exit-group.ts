@@ -2,6 +2,7 @@ import { SocketEvents } from "../../events";
 import { clearFromRedis } from "../../redis";
 import { SocketHandlerParams } from "../../types/common";
 import { prisma } from "../../utils/prisma";
+import msgpack from "msgpack-lite";
 
 type ExitGroup = {
   groupId: string;
@@ -9,8 +10,9 @@ type ExitGroup = {
 
 export const exitGroupHandler = async (
   { io, payload, socket }: SocketHandlerParams,
-  { groupId }: ExitGroup
+  data: Buffer
 ) => {
+  const { groupId } = msgpack.decode(data) as ExitGroup;
   const group = await prisma.group.findUnique({
     where: {
       groupId,
@@ -144,8 +146,8 @@ export const exitGroupHandler = async (
     }),
   ]);
 
-  io.to(groupId).emit(SocketEvents.EXIT_GROUP, {
+  io.to(groupId).emit(SocketEvents.EXIT_GROUP,msgpack.encode({
     groupId,
     exitedUserId: payload.userId,
-  });
+  }))
 };

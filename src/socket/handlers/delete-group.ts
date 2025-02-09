@@ -2,6 +2,7 @@ import { SocketEvents } from "../../events";
 import { clearFromRedis } from "../../redis";
 import { SocketHandlerParams } from "../../types/common";
 import { prisma } from "../../utils/prisma";
+import msgpack from "msgpack-lite";
 
 type DeleteGroup = {
   groupId: string;
@@ -9,8 +10,9 @@ type DeleteGroup = {
 
 export const deleteGroupHandler = async (
   { io, payload, socket }: SocketHandlerParams,
-  { groupId }: DeleteGroup
+  data: Buffer
 ) => {
+  const { groupId } = msgpack.decode(data) as DeleteGroup;
   const group = await prisma.group.findUnique({
     where: {
       groupId,
@@ -119,9 +121,9 @@ export const deleteGroupHandler = async (
     }),
   ]);
 
-  io.to(groupId).emit(SocketEvents.DELETE_GROUP, {
+  io.to(groupId).emit(SocketEvents.DELETE_GROUP, msgpack.encode({
     groupName: group.name,
     deletedBy: payload.userId,
     chatId,
-  });
+  }))
 };

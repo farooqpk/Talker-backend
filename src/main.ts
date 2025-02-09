@@ -15,7 +15,9 @@ export const server = http.createServer(app);
 
 configureExpress(app);
 
-export const io: Server = new Server(server);
+export const io: Server = new Server(server,{
+  transports: ["websocket"],
+});
 
 configureSocketIO(io);
 

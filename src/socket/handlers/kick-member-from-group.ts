@@ -2,6 +2,7 @@ import { SocketEvents } from "../../events";
 import { clearFromRedis } from "../../redis";
 import { SocketHandlerParams } from "../../types/common";
 import { prisma } from "../../utils/prisma";
+import msgpack from "msgpack-lite";
 
 type KickMemberFromGroup = {
   groupId: string;
@@ -10,8 +11,9 @@ type KickMemberFromGroup = {
 
 export const KickMemberFromGroupHandler = async (
   { socket, payload, io }: SocketHandlerParams,
-  { groupId, userId }: KickMemberFromGroup
+  data: Buffer
 ) => {
+  const { groupId, userId } = msgpack.decode(data) as KickMemberFromGroup;
   const adminId = payload.userId;
 
   const group = await prisma.group.findUnique({
@@ -126,10 +128,13 @@ export const KickMemberFromGroupHandler = async (
     }),
   ]);
 
-  io.to(groupId).emit(SocketEvents.KICK_MEMBER, {
-    removedUserId: userId,
-    removedUserName: group?.Chat?.participants[0]?.user?.username,
-    chatId,
-    groupName: group?.name,
-  });
+  io.to(groupId).emit(
+    SocketEvents.KICK_MEMBER,
+    msgpack.encode({
+      removedUserId: userId,
+      removedUserName: group?.Chat?.participants[0]?.user?.username,
+      chatId,
+      groupName: group?.name,
+    })
+  );
 };

@@ -2,6 +2,7 @@ import { SocketEvents } from "../../events";
 import { clearFromRedis, getDataFromRedis } from "../../redis";
 import { SocketHandlerParams } from "../../types/common";
 import { prisma } from "../../utils/prisma";
+import msgpack from "msgpack-lite";
 
 type ReadMessageStatus = {
   messageId: string;
@@ -9,8 +10,9 @@ type ReadMessageStatus = {
 
 export const readMessageStatusHandler = async (
   { socket, payload, io }: SocketHandlerParams,
-  { messageId }: ReadMessageStatus
+  data: Buffer
 ) => {
+  const { messageId } = msgpack.decode(data) as ReadMessageStatus;
   const userId = payload.userId;
 
   const message = await prisma.message.findUnique({

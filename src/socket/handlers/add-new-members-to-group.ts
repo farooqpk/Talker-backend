@@ -2,6 +2,7 @@ import { AppEvents, SocketEvents } from "../../events";
 import { clearFromRedis, getDataFromRedis } from "../../redis";
 import { SocketHandlerParams } from "../../types/common";
 import { prisma } from "../../utils/prisma";
+import msgpack from "msgpack-lite";
 
 type AddNewMembersToGroup = {
   groupId: string;
@@ -13,8 +14,9 @@ type AddNewMembersToGroup = {
 
 export const addNewMembersToGroupHandler = async (
   { socket, payload, io }: SocketHandlerParams,
-  { groupId, members }: AddNewMembersToGroup
+  data: Buffer
 ) => {
+  const { groupId, members } = msgpack.decode(data) as AddNewMembersToGroup;
   const adminId = payload.userId;
 
   const group = await prisma.group.findUnique({

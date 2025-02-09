@@ -2,6 +2,7 @@ import { SocketEvents } from "../../events";
 import { clearFromRedis } from "../../redis";
 import { SocketHandlerParams } from "../../types/common";
 import { prisma } from "../../utils/prisma";
+import msgpack from "msgpack-lite";
 
 type SetAsAdmin = {
   groupId: string;
@@ -10,8 +11,9 @@ type SetAsAdmin = {
 
 export const setAsAdminHandler = async (
   { io, payload, socket }: SocketHandlerParams,
-  { groupId, userId }: SetAsAdmin
+  data: Buffer
 ) => {
+  const { groupId, userId } = msgpack.decode(data) as SetAsAdmin;
   const group = await prisma.group.findUnique({
     where: {
       groupId,
@@ -33,10 +35,13 @@ export const setAsAdminHandler = async (
   });
 
   if (!group) {
-    socket.emit(SocketEvents.ERROR, {
-      message:
-        "You are not admin of this group or the new admin already is the admin of the group",
-    });
+    socket.emit(
+      SocketEvents.ERROR,
+      msgpack.encode({
+        message:
+          "You are not admin of this group or the new admin already is the admin of the group",
+      })
+    );
     return;
   }
 

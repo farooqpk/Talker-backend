@@ -1,4 +1,5 @@
 import { redisClient } from ".././utils/redis";
+import msgpack from "msgpack-lite";
 
 export const setDataInRedis = async ({
   key,
@@ -16,10 +17,10 @@ export const setDataInRedis = async ({
       return await redisClient.setex(
         key,
         expirationTimeInSeconds,
-        isString ? data : JSON.stringify(data)
+        isString ? data : msgpack.encode(data)
       );
     } else {
-      return await redisClient.set(key, isString ? data : JSON.stringify(data));
+      return await redisClient.set(key, isString ? data : msgpack.encode(data));
     }
   } catch (error) {
     console.log(error);

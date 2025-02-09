@@ -2,6 +2,7 @@ import { clearFromRedis, getDataFromRedis, setDataInRedis } from "../../redis";
 import { prisma } from "../../utils/prisma";
 import { ContentType, type SocketHandlerParams } from "../../types/common";
 import { SocketEvents } from "../../events";
+import msgpack from "msgpack-lite";
 
 type PrivateChatType = {
   recipientId: string;
@@ -15,8 +16,12 @@ type PrivateChatType = {
 
 export const sendPrivateMsgHandler = async (
   { io, payload, socket }: SocketHandlerParams,
-  { recipientId, message, encryptedChatKey }: PrivateChatType
+  data: Buffer
 ) => {
+  const { recipientId, message, encryptedChatKey } = msgpack.decode(
+    data
+  ) as PrivateChatType;
+
   const recipentSocketId = await getDataFromRedis(
     `socket:${recipientId}`,
     true
@@ -128,7 +133,7 @@ export const sendPrivateMsgHandler = async (
   // send encrypted chat keys for the initial chat, because we cant get chat key immediatly from client side from chat key api call
   io.to(recipentSocketId ? [recipentSocketId, socket.id] : [socket.id]).emit(
     SocketEvents.SEND_PRIVATE_MESSAGE,
-    {
+    msgpack.encode({
       isRefetchChatList: isNewChat,
       message: isNewChat
         ? {
@@ -140,6 +145,6 @@ export const sendPrivateMsgHandler = async (
             ...result.msg,
             status: [result.msgStatus],
           },
-    }
+    })
   );
 };
