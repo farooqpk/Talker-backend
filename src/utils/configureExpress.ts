@@ -9,8 +9,25 @@ import { groupRouter } from "../routes/group";
 import cookieParser from "cookie-parser";
 import { aiRouter } from "../routes/ai";
 import morgan from "morgan";
+import { NODE_ENV } from "../config";
 
 export function configureExpress(app: express.Express) {
+  
+  if (NODE_ENV === "production") {
+    // Trust the first proxy (Nginx)
+    app.set("trust proxy", 1);
+    
+    app.use(
+      rateLimit({
+        windowMs: 10 * 60 * 1000,
+        max: 150,
+        standardHeaders: true,
+      })
+    );
+
+    app.use(morgan("common"));
+  }
+
   app.use(express.json());
   app.use(cookieParser());
   app.use(express.urlencoded({ extended: true }));
@@ -42,16 +59,6 @@ export function configureExpress(app: express.Express) {
       },
     })
   );
-
-  app.use(
-    rateLimit({
-      windowMs: 10 * 60 * 1000,
-      max: 150,
-      standardHeaders: true,
-    })
-  );
-
-  app.use(morgan("common"));
 
   app.get("/api", (req, res) => res.send("Hello World!"));
   app.use("/api/auth", authRouter);

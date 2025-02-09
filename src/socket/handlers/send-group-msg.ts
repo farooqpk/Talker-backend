@@ -3,6 +3,7 @@ import { prisma } from "../../utils/prisma";
 import { clearFromRedis } from "../../redis";
 import { SocketEvents } from "../../events";
 import type { SocketHandlerParams } from "../../types/common";
+import msgpack from "msgpack-lite";
 
 type GroupMsgType = {
   groupId: string;
@@ -15,8 +16,9 @@ type GroupMsgType = {
 
 export const sendGroupMsgHandler = async (
   { io, payload }: SocketHandlerParams,
-  { groupId, message }: GroupMsgType
+  data: Buffer
 ) => {
+  const { groupId, message } = msgpack.decode(data) as GroupMsgType;
   const { content, contentType, mediaPath } = message;
 
   const IS_IMAGE_OR_AUDIO =
@@ -103,7 +105,7 @@ export const sendGroupMsgHandler = async (
     }),
   ]);
 
-  io.to(groupId).emit(SocketEvents.SEND_GROUP_MESSAGE, {
+  io.to(groupId).emit(SocketEvents.SEND_GROUP_MESSAGE, msgpack.encode({
     message: { ...msg, status: msgStatus },
-  });
+  }));
 };

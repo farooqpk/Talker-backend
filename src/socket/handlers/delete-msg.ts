@@ -2,6 +2,7 @@ import { SocketEvents } from "../../events";
 import { clearFromRedis, getDataFromRedis } from "../../redis";
 import { SocketHandlerParams } from "../../types/common";
 import { prisma } from "../../utils/prisma";
+import msgpack from "msgpack-lite";
 
 type DeleteMsgType = {
   messageId: string;
@@ -12,8 +13,12 @@ type DeleteMsgType = {
 
 export const deleteMsgHandler = async (
   { io, payload, socket }: SocketHandlerParams,
-  { messageId, recipientId, groupId, isGroup }: DeleteMsgType
+  data: Buffer
 ) => {
+  const { messageId, groupId, isGroup, recipientId } = msgpack.decode(
+    data
+  ) as DeleteMsgType;
+
   if ((isGroup && !groupId) || (!isGroup && !recipientId)) return;
 
   const msg = await prisma.message.findUnique({

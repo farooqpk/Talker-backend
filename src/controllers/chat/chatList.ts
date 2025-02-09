@@ -5,6 +5,7 @@ import { getDataFromRedis, setDataInRedis } from "../../redis/index";
 export const chatList = async (req: Request, res: Response) => {
   try {
     const cachedChats = await getDataFromRedis(`chats:${req.userId}`);
+
     if (cachedChats) return res.status(200).json(cachedChats);
 
     const chats = await prisma.chat.findMany({
