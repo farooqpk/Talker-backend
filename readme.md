@@ -85,7 +85,7 @@ The built files will be in the `dist` directory.
 
 - LinkedIn: [Ummar Farooq PK](https://linkedin.com/in/ummarfarooq-pk)
 
-- Live Demo: [talker.fun](https://talker.fun)
+- Live Demo: [talker](https://talker.cfd)
 
 
 ## License

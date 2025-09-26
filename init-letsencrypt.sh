@@ -5,7 +5,7 @@ if ! docker compose version &>/dev/null; then
   exit 1
 fi
 
-domains=(talker.fun www.talker.fun)
+domains=(talker.cfd www.talker.cfd)
 rsa_key_size=4096
 data_path="./certbot"
 email="myemail"
